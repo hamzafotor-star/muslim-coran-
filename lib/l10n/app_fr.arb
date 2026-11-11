@@ -1,0 +1,55 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Muslim Coran",
+  "greeting": "Assalamu alaykum",
+  "tabQuran": "Coran",
+  "tabPrayers": "Prières",
+  "tabQibla": "Qibla",
+  "tabBookmarks": "Signets",
+  "tabMore": "Plus",
+  "nextPrayer": "Prochaine prière",
+  "inTime": "dans {duration}",
+  "@inTime": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "resumeReading": "Reprendre la lecture",
+  "continueBtn": "Continuer",
+  "verseOfTheDay": "Verset du jour",
+  "surahs": "Sourates",
+  "juz": "Juz'",
+  "pages": "Pages",
+  "meccan": "Mecquoise",
+  "medinan": "Médinoise",
+  "versesCount": "{count} v.",
+  "@versesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchHint": "Rechercher un verset ou un mot…",
+  "arabic": "Arabe",
+  "french": "Français",
+  "english": "Anglais",
+  "bookmarks": "Signets",
+  "notes": "Notes",
+  "history": "Historique",
+  "emptyBookmarks": "Aucun signet enregistré pour le moment.",
+  "openQuran": "Ouvrir le Coran",
+  "settings": "Réglages",
+  "downloads": "Téléchargements",
+  "themeLight": "Clair",
+  "themeDark": "Sombre",
+  "themeSepia": "Sépia",
+  "comingSoon": "Bientôt",
+  "chooseCity": "Choisir une ville",
+  "useMyLocation": "Utiliser ma position",
+  "batteryOptimization": "Optimisation batterie",
+  "alignQibla": "Aligné — précision haute",
+  "calibrateSensor": "Calibrer le capteur"
+}

@@ -1,0 +1,6 @@
+# Copiez ce fichier sous le nom android/key.properties (ignoré par Git)
+# et renseignez vos identifiants de signature de release :
+storePassword=VOTRE_MOT_DE_PASSE_STORE
+keyPassword=VOTRE_MOT_DE_PASSE_CLE
+keyAlias=muslim_coran_release
+storeFile=../../keystore/muslim_coran_release.jks

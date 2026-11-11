@@ -1,0 +1,55 @@
+{
+  "@@locale": "ar",
+  "appTitle": "مسلم قرآن",
+  "greeting": "السلام عليكم",
+  "tabQuran": "القرآن",
+  "tabPrayers": "الصلوات",
+  "tabQibla": "القبلة",
+  "tabBookmarks": "العلامات",
+  "tabMore": "المزيد",
+  "nextPrayer": "الصلاة القادمة",
+  "inTime": "بعد {duration}",
+  "@inTime": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "resumeReading": "متابعة القراءة",
+  "continueBtn": "متابعة",
+  "verseOfTheDay": "آية اليوم",
+  "surahs": "السور",
+  "juz": "الأجزاء",
+  "pages": "الصفحات",
+  "meccan": "مكية",
+  "medinan": "مدنية",
+  "versesCount": "{count} آية",
+  "@versesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchHint": "ابحث عن آية أو كلمة…",
+  "arabic": "العربية",
+  "french": "الفرنسية",
+  "english": "الإنجليزية",
+  "bookmarks": "العلامات",
+  "notes": "الملاحظات",
+  "history": "السجل",
+  "emptyBookmarks": "لا توجد علامات محفوظة حالياً.",
+  "openQuran": "فتح المصحف",
+  "settings": "الإعدادات",
+  "downloads": "التنزيلات",
+  "themeLight": "فاتح",
+  "themeDark": "داكن",
+  "themeSepia": "ورقي (سيبيا)",
+  "comingSoon": "قريباً",
+  "chooseCity": "اختر مدينة",
+  "useMyLocation": "استخدام موقعي الحالي",
+  "batteryOptimization": "تحسين البطارية",
+  "alignQibla": "محاذاة دقيقة باتجاه القبلة",
+  "calibrateSensor": "معايرة البوصلة"
+}

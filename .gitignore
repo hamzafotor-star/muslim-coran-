@@ -1,0 +1,23 @@
+# Flutter / Dart / Pub
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+
+# Android signing keys (NE JAMAIS COMMITER DE CLÉ EN DUR)
+android/key.properties
+*.jks
+*.keystore
+
+# IDE & OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Coverage & temp
+coverage/
+*.log

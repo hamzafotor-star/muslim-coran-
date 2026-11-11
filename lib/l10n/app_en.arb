@@ -1,0 +1,55 @@
+{
+  "@@locale": "en",
+  "appTitle": "Muslim Coran",
+  "greeting": "Assalamu alaykum",
+  "tabQuran": "Quran",
+  "tabPrayers": "Prayers",
+  "tabQibla": "Qibla",
+  "tabBookmarks": "Bookmarks",
+  "tabMore": "More",
+  "nextPrayer": "Next prayer",
+  "inTime": "in {duration}",
+  "@inTime": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "resumeReading": "Resume reading",
+  "continueBtn": "Continue",
+  "verseOfTheDay": "Verse of the day",
+  "surahs": "Surahs",
+  "juz": "Juz'",
+  "pages": "Pages",
+  "meccan": "Meccan",
+  "medinan": "Medinan",
+  "versesCount": "{count} v.",
+  "@versesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchHint": "Search a verse or word…",
+  "arabic": "Arabic",
+  "french": "French",
+  "english": "English",
+  "bookmarks": "Bookmarks",
+  "notes": "Notes",
+  "history": "History",
+  "emptyBookmarks": "No bookmarks saved yet.",
+  "openQuran": "Open Quran",
+  "settings": "Settings",
+  "downloads": "Downloads",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSepia": "Sepia",
+  "comingSoon": "Coming soon",
+  "chooseCity": "Choose a city",
+  "useMyLocation": "Use my location",
+  "batteryOptimization": "Battery optimization",
+  "alignQibla": "Aligned — high accuracy",
+  "calibrateSensor": "Calibrate sensor"
+}
