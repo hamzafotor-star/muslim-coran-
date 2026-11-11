@@ -6,11 +6,12 @@ import '../../../core/database/database_service.dart';
 import '../../../core/providers/app_preferences_provider.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../audio/data/quran_audio_handler.dart';
 
 /// E01 — Écran de démarrage (Splash) :
-/// - Fond vert profond `#0F5132`, symbole croissant/étoile et titre blanc/or centré.
-/// - Durée : 1 à 2 s maximum pendant l'ouverture et la vérification SHA-256 de `quran.db`.
-/// - Redirige vers E02 (au 1er lancement) ou E04 (si déjà configuré).
+/// - Fond vert profond `#0F5132`, logo officiel Muslim Coran centré.
+/// - Charge les préférences persistées (`app_preferences.json`) + `quran.db` + `user.db`.
+/// - Redirige vers E02 (uniquement au 1er lancement) ou directement vers E04 (si déjà configuré).
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -28,6 +29,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Future<void> _bootApp() async {
     final Stopwatch sw = Stopwatch()..start();
     try {
+      await ref.read(appPreferencesProvider.notifier).loadFromStorage();
+      final AppPreferencesState prefs = ref.read(appPreferencesProvider);
+      final ReciterOption chosenReciter =
+          AudioPlaybackState.availableReciters.firstWhere(
+        (ReciterOption r) => r.id == prefs.defaultReciterId,
+        orElse: () => AudioPlaybackState.defaultRecitersFirst,
+      );
+      ref.read(audioControllerProvider.notifier).setReciter(chosenReciter);
+
       await ref.read(databaseServiceProvider).quranDb;
       await ref.read(databaseServiceProvider).userDb;
     } catch (_) {
@@ -62,25 +72,31 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               children: <Widget>[
                 const Spacer(),
                 Container(
-                  width: 96,
-                  height: 96,
+                  width: 140,
+                  height: 140,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.accentSoftGold,
-                      width: 2.5,
-                    ),
+                    boxShadow: <BoxShadow>[
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.35),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    '☪',
-                    style: TextStyle(
-                      fontSize: 48,
-                      color: AppColors.accentSoftGold,
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.menu_book,
+                        size: 64,
+                        color: AppColors.accentSoftGold,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 22),
                 const Text(
                   'MUSLIM CORAN',
                   style: TextStyle(
@@ -92,7 +108,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Lecture fidèle · Horaires · Qibla · 100 % Hors ligne',
+                  'Mushaf Tajweed · Horaires · Qibla · 100 % Hors ligne',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppColors.secondaryLightGreen,

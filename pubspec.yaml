@@ -41,6 +41,7 @@ flutter:
     - assets/db/quran.db
     - assets/db/quran_schema.sql
     - assets/audio/adhan_notification.wav
+    - assets/images/app_logo.png
     - assets/fonts/
 
   fonts:

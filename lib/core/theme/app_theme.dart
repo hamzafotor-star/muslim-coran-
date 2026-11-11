@@ -8,8 +8,15 @@ enum AppThemeMode {
   sepia,
 }
 
-/// Polices arabes OFL (3 embarquées hors ligne + 6 téléchargeables via FontLoader — RF-03, E16, E17).
+/// Polices arabes OFL (Mushaf Tajweed + 3 embarquées hors ligne + 6 téléchargeables via FontLoader — RF-03, E16, E17).
 enum ArabicFontFamily {
+  mushafTajweed(
+    'AmiriQuran',
+    'Mushaf Tajweed (Couleurs)',
+    styleDescription: ' Écriture Uthmani avec coloration des règles de Tajweed (embarquée)',
+    isBuiltIn: true,
+    estimatedSizeKb: 225,
+  ),
   amiriQuran(
     'AmiriQuran',
     'Amiri Quran',

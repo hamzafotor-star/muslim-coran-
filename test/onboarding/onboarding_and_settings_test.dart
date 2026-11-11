@@ -19,11 +19,20 @@ void main() {
       notifier.setArabicFont(ArabicFontFamily.scheherazadeNew);
       notifier.setArabicFontSize(34.0);
       notifier.setLocale(const Locale('ar'));
+      notifier.completeOnboarding();
 
       expect(notifier.state.themeMode, AppThemeMode.sepia);
       expect(notifier.state.arabicFont, ArabicFontFamily.scheherazadeNew);
       expect(notifier.state.arabicFontSize, 34.0);
       expect(notifier.state.locale.languageCode, 'ar');
+      expect(notifier.state.onboardingCompleted, isTrue);
+
+      final AppPreferencesState restored =
+          AppPreferencesState.fromJson(notifier.state.toJson());
+      expect(restored.onboardingCompleted, isTrue);
+      expect(restored.themeMode, AppThemeMode.sepia);
+      expect(restored.arabicFont, ArabicFontFamily.scheherazadeNew);
+      expect(restored.tajweedColorsEnabled, isTrue);
     });
 
     testWidgets(

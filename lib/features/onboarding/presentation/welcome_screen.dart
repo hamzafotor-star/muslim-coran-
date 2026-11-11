@@ -58,6 +58,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         curve: Curves.easeOut,
       );
     } else {
+      ref.read(appPreferencesProvider.notifier).completeOnboarding();
       context.go(AppRoutes.permissions);
     }
   }
@@ -72,7 +73,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       appBar: AppBar(
         leadingWidth: 100,
         leading: TextButton(
-          onPressed: () => context.go(AppRoutes.permissions),
+          onPressed: () {
+            ref.read(appPreferencesProvider.notifier).completeOnboarding();
+            context.go(AppRoutes.permissions);
+          },
           child: const Text('Passer'),
         ),
       ),

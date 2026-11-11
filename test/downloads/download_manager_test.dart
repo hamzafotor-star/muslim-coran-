@@ -36,9 +36,10 @@ void main() {
       expect(manager.totalDownloadedBytes, greaterThan(0));
     });
 
-    test('Initialise les 3 polices embarquées et les 6 polices OFL téléchargeables', () {
+    test('Initialise Mushaf Tajweed, les 3 polices embarquées et les 6 polices OFL téléchargeables', () {
       final FontDownloadNotifier fontManager = FontDownloadNotifier();
-      expect(fontManager.state.length, 9);
+      expect(fontManager.state.length, 10);
+      expect(fontManager.state[ArabicFontFamily.mushafTajweed]!.isReady, isTrue);
       expect(fontManager.state[ArabicFontFamily.amiriQuran]!.isReady, isTrue);
       expect(fontManager.state[ArabicFontFamily.harmattan]!.isReady, isFalse);
       expect(

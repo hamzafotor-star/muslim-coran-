@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../audio/data/quran_audio_handler.dart';
 import '../../quran/domain/utils/arabic_normalizer.dart';
+import '../../quran/presentation/widgets/tajweed_text_view.dart';
 
 /// E16 — Réglages généraux :
 /// - Langue de l'interface (`Français`, `العربية`, `English` avec RTL automatique).
@@ -188,21 +189,40 @@ class SettingsScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(
+                      'Couleurs indicatives du Mushaf Tajweed',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: const Text(
+                      'Madd (rouge), Ghunnah/Ikhfâ’ (vert), Qalqalah (bleu), Iqlâb/Tafkhîm (orange)',
+                    ),
+                    value: prefs.tajweedColorsEnabled,
+                    onChanged: notifier.setTajweedColorsEnabled,
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(
+                      'Mode Mushaf pleine page (continu)',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    value: prefs.isMushafPageMode,
+                    onChanged: notifier.setMushafPageMode,
+                  ),
+                  const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: AppColors.secondaryLightGreen.withOpacity(0.35),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      ArabicNormalizer.basmalaUthmani,
-                      textDirection: TextDirection.rtl,
+                    child: TajweedTextView(
+                      text: ArabicNormalizer.basmalaUthmani,
+                      fontFamily: prefs.arabicFont.fontFamily,
+                      fontSize: prefs.arabicFontSize,
+                      enableTajweedColors: prefs.tajweedColorsEnabled,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: prefs.arabicFont.fontFamily,
-                        fontSize: prefs.arabicFontSize,
-                        height: 1.8,
-                      ),
                     ),
                   ),
                 ],

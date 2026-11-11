@@ -66,13 +66,22 @@ class FullAudioPlayerScreen extends ConsumerWidget {
                   height: 112,
                   decoration: BoxDecoration(
                     color: AppColors.primaryDeepGreen,
-                    borderRadius: BorderRadius.circular(24),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.accentSoftGold,
+                      width: 2,
+                    ),
                   ),
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.menu_book,
-                    size: 52,
-                    color: AppColors.accentSoftGold,
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.menu_book,
+                        size: 52,
+                        color: AppColors.accentSoftGold,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
