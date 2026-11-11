@@ -178,7 +178,7 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen>
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.accentSoftGold.withValues(alpha: 0.25),
+                                    color: AppColors.accentSoftGold.withOpacity(0.25),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: const Text(

@@ -247,14 +247,10 @@ class _AyahReaderScreenState extends ConsumerState<AyahReaderScreen> {
                             horizontal: 12,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.secondaryLightGreen.withValues(
-                              alpha: 0.35,
-                            ),
+                            color: AppColors.secondaryLightGreen.withOpacity(0.35),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: AppColors.accentSoftGold.withValues(
-                                alpha: 0.5,
-                              ),
+                              color: AppColors.accentSoftGold.withOpacity(0.5),
                             ),
                           ),
                           child: Text(
@@ -341,7 +337,7 @@ class _AyahReaderScreenState extends ConsumerState<AyahReaderScreen> {
                                             ),
                                             decoration: BoxDecoration(
                                               color: AppColors.accentSoftGold
-                                                  .withValues(alpha: 0.25),
+                                                  .withOpacity(0.25),
                                               borderRadius:
                                                   BorderRadius.circular(8),
                                             ),

@@ -149,9 +149,7 @@ class SettingsScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppColors.secondaryLightGreen.withValues(
-                        alpha: 0.35,
-                      ),
+                      color: AppColors.secondaryLightGreen.withOpacity(0.35),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(

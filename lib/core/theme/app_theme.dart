@@ -110,7 +110,7 @@ class AppTheme {
         elevation: 0,
         centerTitle: false,
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: cardColor,
         elevation: 1,
         margin: const EdgeInsets.symmetric(vertical: gridUnit),

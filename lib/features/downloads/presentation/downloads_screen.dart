@@ -104,7 +104,7 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen>
       padding: const EdgeInsets.all(16),
       children: <Widget>[
         Card(
-          color: AppColors.secondaryLightGreen.withValues(alpha: 0.45),
+          color: AppColors.secondaryLightGreen.withOpacity(0.45),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(

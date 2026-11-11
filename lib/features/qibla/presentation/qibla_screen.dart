@@ -211,7 +211,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                     width: isAligned ? 5 : 3,
                   ),
                   color: isAligned
-                      ? AppColors.secondaryLightGreen.withValues(alpha: 0.35)
+                      ? AppColors.secondaryLightGreen.withOpacity(0.35)
                       : Theme.of(context).cardTheme.color,
                 ),
                 child: Stack(

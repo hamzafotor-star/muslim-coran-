@@ -114,7 +114,7 @@ class PrayerSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Card(
-            color: AppColors.secondaryLightGreen.withValues(alpha: 0.45),
+            color: AppColors.secondaryLightGreen.withOpacity(0.45),
             child: ListTile(
               leading: const Icon(
                 Icons.battery_saver_outlined,
