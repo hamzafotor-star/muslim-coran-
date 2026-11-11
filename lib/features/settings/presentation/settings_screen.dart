@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/fonts/font_download_service.dart';
 import '../../../core/providers/app_preferences_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -11,9 +12,9 @@ import '../../quran/domain/utils/arabic_normalizer.dart';
 /// E16 — Réglages généraux :
 /// - Langue de l'interface (`Français`, `العربية`, `English` avec RTL automatique).
 /// - Thème `[Clair | Sombre | Sépia]`.
-/// - Texte arabe : Police (3 polices OFL) + Taille avec **aperçu en direct**.
+/// - Texte arabe : 3 polices OFL embarquées + 6 polices OFL téléchargeables à la demande + Taille avec **aperçu en direct**.
 /// - Traduction principale (`Hamidullah FR` / `Transliteration EN`) + interrupteur « Afficher la traduction ».
-/// - Récitateur par défaut.
+/// - Récitateur par défaut (choix parmi 12 récitateurs, dont Abdullah Al-Matrood).
 /// - Compte & sauvegarde (V1.x) et Confidentialité.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -24,6 +25,8 @@ class SettingsScreen extends ConsumerWidget {
     final AppPreferencesState prefs = ref.watch(appPreferencesProvider);
     final AppPreferencesNotifier notifier =
         ref.read(appPreferencesProvider.notifier);
+    final Map<ArabicFontFamily, FontDownloadItemState> fontStates =
+        ref.watch(fontDownloadProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -106,7 +109,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
 
-          // 3. Texte arabe (Police + Taille + Aperçu en direct)
+          // 3. Texte arabe (Police embarquée ou téléchargeable + Taille + Aperçu en direct)
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -114,17 +117,56 @@ class SettingsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   const Text(
-                    'Texte arabe (Polices sous licence OFL)',
+                    'Texte arabe (Polices embarquées & téléchargeables)',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Touchez une police avec ⬇ pour la télécharger gratuitement hors ligne.',
+                    style: TextStyle(fontSize: 12),
                   ),
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
+                    runSpacing: 6,
                     children: ArabicFontFamily.values.map((ArabicFontFamily f) {
+                      final FontDownloadItemState? fState = fontStates[f];
+                      final bool isReady = f.isBuiltIn || (fState?.isReady ?? false);
+                      final bool isDownloading =
+                          fState?.status == FontInstallStatus.downloading;
+
                       return ChoiceChip(
+                        avatar: isDownloading
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : (!isReady
+                                ? const Icon(Icons.download_outlined, size: 16)
+                                : null),
                         label: Text(f.displayName),
                         selected: prefs.arabicFont == f,
-                        onSelected: (_) => notifier.setArabicFont(f),
+                        onSelected: (_) async {
+                          if (isReady) {
+                            notifier.setArabicFont(f);
+                          } else {
+                            final bool ok = await ref
+                                .read(fontDownloadProvider.notifier)
+                                .downloadAndLoadFont(f);
+                            if (ok) {
+                              notifier.setArabicFont(f);
+                            } else if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Impossible de télécharger ${f.displayName}. Vérifiez votre connexion Internet.',
+                                  ),
+                                ),
+                              );
+                            }
+                          }
+                        },
                       );
                     }).toList(),
                   ),
@@ -196,10 +238,14 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
 
-          // 5. Récitateur par défaut
+          // 5. Récitateur par défaut (12 récitateurs dont Abdullah Al-Matrood)
           Card(
             child: ListTile(
-              title: const Text('Récitateur par défaut'),
+              leading: const Icon(
+                Icons.record_voice_over_outlined,
+                color: AppColors.primaryDeepGreen,
+              ),
+              title: const Text('Récitateur par défaut (12 lecteurs)'),
               subtitle: Text(
                 AudioPlaybackState.availableReciters
                     .firstWhere(
@@ -208,14 +254,8 @@ class SettingsScreen extends ConsumerWidget {
                     )
                     .name,
               ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                final int nextId = prefs.defaultReciterId == 1 ? 2 : 1;
-                notifier.setDefaultReciterId(nextId);
-                final ReciterOption chosen = AudioPlaybackState.availableReciters
-                    .firstWhere((ReciterOption r) => r.id == nextId);
-                ref.read(audioControllerProvider.notifier).setReciter(chosen);
-              },
+              trailing: const Icon(Icons.arrow_drop_down),
+              onTap: () => _showReciterPickerSheet(context, ref, prefs, notifier),
             ),
           ),
 
@@ -263,6 +303,71 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showReciterPickerSheet(
+    BuildContext context,
+    WidgetRef ref,
+    AppPreferencesState prefs,
+    AppPreferencesNotifier notifier,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext ctx) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.65,
+          maxChildSize: 0.9,
+          builder: (BuildContext context, ScrollController scrollController) {
+            return SafeArea(
+              child: Column(
+                children: <Widget>[
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text(
+                      'Choisir votre récitateur (12 lecteurs)',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: ListView.builder(
+                      controller: scrollController,
+                      itemCount: AudioPlaybackState.availableReciters.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final ReciterOption r =
+                            AudioPlaybackState.availableReciters[index];
+                        return RadioListTile<int>(
+                          value: r.id,
+                          groupValue: prefs.defaultReciterId,
+                          activeColor: AppColors.primaryDeepGreen,
+                          title: Text(
+                            r.name,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: Text(r.style),
+                          onChanged: (_) {
+                            notifier.setDefaultReciterId(r.id);
+                            ref
+                                .read(audioControllerProvider.notifier)
+                                .setReciter(r);
+                            Navigator.of(ctx).pop();
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -31,21 +31,37 @@ Toutes les polices arabes prévues et référencées dans l'application sont pub
 
 | Police | Usage | Auteur / Fonderie | Licence | Lien officiel |
 | :--- | :--- | :--- | :--- | :--- |
-| **Amiri Quran** (`AmiriQuran`) | Police arabe coranique par défaut (style Naskh classique du Caire / Bulaq) | **Khaled Hosny** (`Amiri Typeface Project`) | **SIL Open Font License 1.1 (OFL-1.1)** | `https://github.com/aliftype/amiri` |
-| **Scheherazade New** (`ScheherazadeNew`) | Police arabe coranique alternative à haute lisibilité (étendue Unicode Uthmani) | **SIL International** | **SIL Open Font License 1.1 (OFL-1.1)** | `https://software.sil.org/scheherazade/` |
-| **Lateef** (`Lateef`) | Police arabe Naskh/Nastaliq adaptée à l'Afrique de l'Ouest et au sous-continent | **SIL International** | **SIL Open Font License 1.1 (OFL-1.1)** | `https://software.sil.org/lateef/` |
+| **Amiri Quran** (`AmiriQuran`) | Police arabe coranique par défaut (embarquée) | **Khaled Hosny** (`Amiri Typeface Project`) | **SIL Open Font License 1.1 (OFL-1.1)** | `https://github.com/aliftype/amiri` |
+| **Scheherazade New** (`ScheherazadeNew`) | Police arabe coranique alternative à haute lisibilité (embarquée) | **SIL International** | **SIL Open Font License 1.1 (OFL-1.1)** | `https://software.sil.org/scheherazade/` |
+| **Lateef** (`Lateef`) | Police arabe Naskh/Nastaliq adaptée à l'Afrique de l'Ouest (embarquée) | **SIL International** | **SIL Open Font License 1.1 (OFL-1.1)** | `https://software.sil.org/lateef/` |
+| **Noto Naskh Arabic** (`NotoNaskhArabic`) | Police Naskh téléchargeable à la demande via `FontLoader` | **Google Fonts / Monotype** | **SIL Open Font License 1.1 (OFL-1.1)** | `https://github.com/google/fonts/tree/main/ofl/notonaskharabic` |
+| **Harmattan** (`Harmattan`) | Calligraphie d'Afrique de l'Ouest / Warsh téléchargeable | **SIL International** | **SIL Open Font License 1.1 (OFL-1.1)** | `https://github.com/google/fonts/tree/main/ofl/harmattan` |
+| **Alkalami** (`Alkalami`) | Calligraphie Sudani / Kano téléchargeable | **SIL International** | **SIL Open Font License 1.1 (OFL-1.1)** | `https://github.com/google/fonts/tree/main/ofl/alkalami` |
+| **Reem Kufi** (`ReemKufi`) | Calligraphie coufique moderne téléchargeable | **Khaled Hosny** | **SIL Open Font License 1.1 (OFL-1.1)** | `https://github.com/google/fonts/tree/main/ofl/reemkufi` |
+| **Aref Ruqaa** (`ArefRuqaa`) | Calligraphie Ruq'ah classique téléchargeable | **Abdullah Aref** | **SIL Open Font License 1.1 (OFL-1.1)** | `https://github.com/google/fonts/tree/main/ofl/arefruqaa` |
+| **Mirza** (`Mirza`) | Calligraphie Naskh/Nastaliq téléchargeable | **KB Studio** | **SIL Open Font License 1.1 (OFL-1.1)** | `https://github.com/google/fonts/tree/main/ofl/mirza` |
 | **Inter / Roboto** | Police de l'interface utilisateur (FR / EN) | **Rasmus Andersson / Google** | **SIL Open Font License 1.1 / Apache 2.0** | `https://rsms.me/inter/` |
 
 ---
 
-## 4. Récitateurs Audio & Son d'Adhan
+## 4. Récitateurs Audio (12 Lecteurs) & Son d'Adhan
 
 Les fichiers audio des sourates ne sont **pas embarqués** dans l'APK de base afin de maintenir un poids `< 60 Mo`. Seules les URLs publiques de streaming/téléchargement sont enregistrées dans `reciter` et `audio_file` :
 
 | Récitateur / Audio | Style | Fournisseur / CDN | Licence & Conditions |
 | :--- | :--- | :--- | :--- |
-| **Mishary Rashid Al-Afasy** (`Alafasy_128kbps`) | Murattal (Hafs 'an 'Asim) | **EveryAyah.com / QuranicAudio.com** (`https://everyayah.com/data/Alafasy_128kbps/` / `https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/`) | Gratuit pour usage personnel et applications islamiques non commerciales avec mention de la source (`EveryAyah.com` / `QuranicAudio.com`). |
-| **Mahmoud Khalil Al-Husary** (`Husary_128kbps`) | Murattal pédagogique (Hafs 'an 'Asim) | **EveryAyah.com / QuranicAudio.com** (`https://everyayah.com/data/Husary_128kbps/` / `https://download.quranicaudio.com/quran/mahmood_khaleel_al-husaree/`) | Gratuit pour usage personnel et éducatif avec mention de la source (`EveryAyah.com` / `QuranicAudio.com`). |
+| **Mishary Rashid Al-Afasy** (`مشاري العفاسي`) | Murattal (Hafs 'an 'Asim) | **QuranicAudio.com** (`mishaari_raashid_al_3afaasee`) | Gratuit pour usage personnel et applications islamiques non commerciales avec mention de la source. |
+| **Abdullah Al-Matrood** (`عبد الله المطرود`) | Murattal (Hafs 'an 'Asim) | **QuranicAudio.com / MP3Quran.net** (`abdullah_matroud`) | Gratuit pour usage personnel et applications islamiques non commerciales avec mention de la source. |
+| **Abdul Basit Abdus Samad** (`عبد الباسط عبد الصمد`) | Murattal | **QuranicAudio.com** (`abdul_basit_murattal`) | Gratuit pour usage personnel et non commercial. |
+| **Abdur-Rahman As-Sudais** (`عبد الرحمن السديس`) | Haramain (La Mecque) | **QuranicAudio.com** (`abdurrahmaan_as-sudays`) | Gratuit pour usage personnel et non commercial. |
+| **Maher Al-Muaiqly** (`ماهر المعيقلي`) | Haramain (La Mecque) | **QuranicAudio.com** (`maher_256`) | Gratuit pour usage personnel et non commercial. |
+| **Saad Al-Ghamdi** (`سعد الغامدي`) | Murattal | **QuranicAudio.com** (`sa3d_al-ghaamidi/complete`) | Gratuit pour usage personnel et non commercial. |
+| **Mahmoud Khalil Al-Husary** (`محمود خليل الحصري`) | Murattal / Tajweed | **QuranicAudio.com** (`mahmood_khaleel_al-husaree`) | Gratuit pour usage personnel et éducatif. |
+| **Mohamed Siddiq Al-Minshawi** (`محمد صديق المنشاوي`) | Murattal classique | **QuranicAudio.com** (`muhammad_siddeeq_al-minshaawee`) | Gratuit pour usage personnel et éducatif. |
+| **Saud Ash-Shuraim** (`سعود الشريم`) | Haramain (La Mecque) | **QuranicAudio.com** (`sa3ood_al-shuraym`) | Gratuit pour usage personnel et non commercial. |
+| **Yasser Ad-Dossari** (`ياسر الدوسري`) | Haramain (La Mecque) | **QuranicAudio.com** (`yasser_ad-dussary`) | Gratuit pour usage personnel et non commercial. |
+| **Abu Bakr Ash-Shatri** (`أبو بكر الشاطري`) | Murattal | **QuranicAudio.com** (`abu_bakr_ash-shaatree`) | Gratuit pour usage personnel et non commercial. |
+| **Fares Abbad** (`فارس عباد`) | Murattal | **QuranicAudio.com** (`fares`) | Gratuit pour usage personnel et non commercial. |
 | **Son de notification Adhan par défaut** (`assets/audio/adhan_notification.wav`) | Signal sonore doux d'appel à la prière (synthèse acoustique générée localement par script) | **Projet Muslim Coran** | **CC0 1.0 Universal (Domaine Public)** — En attendant l'enregistrement ou l'acquisition d'un Adhan vocal complet sous licence explicite. |
 
 ---

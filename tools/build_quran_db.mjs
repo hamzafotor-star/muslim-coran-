@@ -239,11 +239,11 @@ function main() {
       insertCity.run(...c);
     }
 
-    // 2 Récitateurs (URLs uniquement)
+    // 12 Récitateurs officiels (URLs publiques QuranicAudio.com — aucun MP3 embarqué dans l'APK)
     const reciters = [
       [
         1,
-        'Mishary Rashid Al-Afasy',
+        'Mishary Rashid Al-Afasy (مشاري العفاسي)',
         'Murattal',
         'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/',
         'Usage personnel et non commercial gratuit — Source : QuranicAudio.com / EveryAyah.com',
@@ -251,10 +251,90 @@ function main() {
       ],
       [
         2,
-        'Mahmoud Khalil Al-Husary',
+        'Abdullah Al-Matrood (عبد الله المطرود)',
         'Murattal',
+        'https://download.quranicaudio.com/quran/abdullah_matroud/',
+        'Usage personnel et non commercial gratuit — Source : QuranicAudio.com / MP3Quran.net',
+        0,
+      ],
+      [
+        3,
+        'Abdul Basit Abdus Samad (عبد الباسط عبد الصمد)',
+        'Murattal',
+        'https://download.quranicaudio.com/quran/abdul_basit_murattal/',
+        'Usage personnel et non commercial gratuit — Source : QuranicAudio.com',
+        0,
+      ],
+      [
+        4,
+        'Abdur-Rahman As-Sudais (عبد الرحمن السديس)',
+        'Haramain',
+        'https://download.quranicaudio.com/quran/abdurrahmaan_as-sudays/',
+        'Usage personnel et non commercial gratuit — Source : QuranicAudio.com',
+        0,
+      ],
+      [
+        5,
+        'Maher Al-Muaiqly (ماهر المعيقلي)',
+        'Haramain',
+        'https://download.quranicaudio.com/quran/maher_256/',
+        'Usage personnel et non commercial gratuit — Source : QuranicAudio.com',
+        0,
+      ],
+      [
+        6,
+        'Saad Al-Ghamdi (سعد الغامدي)',
+        'Murattal',
+        'https://download.quranicaudio.com/quran/sa3d_al-ghaamidi/complete/',
+        'Usage personnel et non commercial gratuit — Source : QuranicAudio.com',
+        0,
+      ],
+      [
+        7,
+        'Mahmoud Khalil Al-Husary (محمود خليل الحصري)',
+        'Murattal / Tajweed',
         'https://download.quranicaudio.com/quran/mahmood_khaleel_al-husaree/',
-        'Usage personnel et éducatif gratuit — Source : QuranicAudio.com / EveryAyah.com',
+        'Usage personnel et éducatif gratuit — Source : QuranicAudio.com',
+        0,
+      ],
+      [
+        8,
+        'Mohamed Siddiq Al-Minshawi (محمد صديق المنشاوي)',
+        'Murattal',
+        'https://download.quranicaudio.com/quran/muhammad_siddeeq_al-minshaawee/',
+        'Usage personnel et éducatif gratuit — Source : QuranicAudio.com',
+        0,
+      ],
+      [
+        9,
+        'Saud Ash-Shuraim (سعود الشريم)',
+        'Haramain',
+        'https://download.quranicaudio.com/quran/sa3ood_al-shuraym/',
+        'Usage personnel et non commercial gratuit — Source : QuranicAudio.com',
+        0,
+      ],
+      [
+        10,
+        'Yasser Ad-Dossari (ياسر الدوسري)',
+        'Haramain',
+        'https://download.quranicaudio.com/quran/yasser_ad-dussary/',
+        'Usage personnel et non commercial gratuit — Source : QuranicAudio.com',
+        0,
+      ],
+      [
+        11,
+        'Abu Bakr Ash-Shatri (أبو بكر الشاطري)',
+        'Murattal',
+        'https://download.quranicaudio.com/quran/abu_bakr_ash-shaatree/',
+        'Usage personnel et non commercial gratuit — Source : QuranicAudio.com',
+        0,
+      ],
+      [
+        12,
+        'Fares Abbad (فارس عباد)',
+        'Murattal',
+        'https://download.quranicaudio.com/quran/fares/',
+        'Usage personnel et non commercial gratuit — Source : QuranicAudio.com',
         0,
       ],
     ];

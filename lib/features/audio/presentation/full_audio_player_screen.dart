@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/providers/app_preferences_provider.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../downloads/data/download_manager_service.dart';
 import '../data/quran_audio_handler.dart';
 
 /// E09 — Lecteur audio plein écran :
-/// - Sourate en cours, récitateur sélectionnable (Mishary Al-Afasy, Mahmoud Al-Husary).
+/// - Sourate en cours, choix parmi 12 récitateurs (dont Abdullah Al-Matrood, Mishary Al-Afasy, etc.).
+/// - Téléchargement direct de la sourate en cours pour le récitateur choisi.
 /// - Barre de progression temporelle + boutons `⏮ ⏪ ⏯ ⏩ ⏭`.
 /// - Options : `🔁 Répéter`, `⏲ Minuteur`, `Vitesse (0.75× à 1.5×)`.
-/// - Si l'audio n'est pas téléchargé et hors connexion : message clair + bouton vers Téléchargements (E17).
 class FullAudioPlayerScreen extends ConsumerWidget {
   const FullAudioPlayerScreen({super.key});
 
@@ -25,6 +27,15 @@ class FullAudioPlayerScreen extends ConsumerWidget {
     final AudioPlaybackState state = ref.watch(audioControllerProvider);
     final AudioController controller =
         ref.read(audioControllerProvider.notifier);
+    final Map<String, SurahDownloadTask> downloads =
+        ref.watch(downloadManagerProvider);
+    final String currentTaskKey = DownloadManagerNotifier.taskKey(
+      state.reciter.id,
+      state.currentSurahId,
+    );
+    final SurahDownloadTask? currentDownload = downloads[currentTaskKey];
+    final bool isDownloaded =
+        state.isOfflineFile || currentDownload?.status == DownloadItemStatus.done;
 
     return Scaffold(
       appBar: AppBar(
@@ -51,8 +62,8 @@ class FullAudioPlayerScreen extends ConsumerWidget {
             Column(
               children: <Widget>[
                 Container(
-                  width: 120,
-                  height: 120,
+                  width: 112,
+                  height: 112,
                   decoration: BoxDecoration(
                     color: AppColors.primaryDeepGreen,
                     borderRadius: BorderRadius.circular(24),
@@ -60,36 +71,50 @@ class FullAudioPlayerScreen extends ConsumerWidget {
                   alignment: Alignment.center,
                   child: const Icon(
                     Icons.menu_book,
-                    size: 56,
+                    size: 52,
                     color: AppColors.accentSoftGold,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 Text(
                   'Sourate ${state.currentSurahName}',
                   style: const TextStyle(
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 6),
                 InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: () => _showReciterPicker(context, state, controller),
-                  child: Padding(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () =>
+                      _showReciterPicker(context, ref, state, controller),
+                  child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryLightGreen.withOpacity(0.45),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        Text(
-                          state.reciter.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: AppColors.primaryDeepGreen,
-                            fontWeight: FontWeight.w600,
+                        const Icon(
+                          Icons.record_voice_over_outlined,
+                          size: 18,
+                          color: AppColors.primaryDeepGreen,
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            state.reciter.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: AppColors.primaryDeepGreen,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -101,21 +126,47 @@ class FullAudioPlayerScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Chip(
-                  avatar: Icon(
-                    state.isOfflineFile
-                        ? Icons.offline_pin
-                        : Icons.cloud_queue,
-                    size: 18,
-                    color: AppColors.primaryDeepGreen,
+                const SizedBox(height: 10),
+                if (isDownloaded)
+                  const Chip(
+                    avatar: Icon(
+                      Icons.offline_pin,
+                      size: 18,
+                      color: AppColors.primaryDeepGreen,
+                    ),
+                    label: Text('Téléchargé — Lecture 100 % hors ligne'),
+                  )
+                else if (currentDownload?.status == DownloadItemStatus.running)
+                  Column(
+                    children: <Widget>[
+                      SizedBox(
+                        width: 220,
+                        child: LinearProgressIndicator(
+                          value: currentDownload!.progress,
+                          color: AppColors.primaryDeepGreen,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Téléchargement en cours (${(currentDownload.progress * 100).round()}%)…',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  )
+                else
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      ref
+                          .read(downloadManagerProvider.notifier)
+                          .downloadSurahForReciter(
+                            reciter: state.reciter,
+                            surahId: state.currentSurahId,
+                            surahName: state.currentSurahName,
+                          );
+                    },
+                    icon: const Icon(Icons.download_outlined, size: 18),
+                    label: const Text('Télécharger cette sourate hors ligne'),
                   ),
-                  label: Text(
-                    state.isOfflineFile
-                        ? 'Lecture hors ligne'
-                        : 'Streaming (Téléchargeable dans E17)',
-                  ),
-                ),
               ],
             ),
 
@@ -248,29 +299,64 @@ class FullAudioPlayerScreen extends ConsumerWidget {
 
   void _showReciterPicker(
     BuildContext context,
+    WidgetRef ref,
     AudioPlaybackState state,
     AudioController controller,
   ) {
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       builder: (BuildContext ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: AudioPlaybackState.availableReciters
-                .map((ReciterOption r) {
-              return RadioListTile<int>(
-                value: r.id,
-                groupValue: state.reciter.id,
-                title: Text(r.name),
-                subtitle: Text('Style : ${r.style}'),
-                onChanged: (_) {
-                  controller.setReciter(r);
-                  Navigator.of(ctx).pop();
-                },
-              );
-            }).toList(),
-          ),
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.65,
+          maxChildSize: 0.9,
+          builder: (BuildContext context, ScrollController scrollController) {
+            return SafeArea(
+              child: Column(
+                children: <Widget>[
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text(
+                      'Choisir un récitateur (12 lecteurs disponibles)',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: ListView.builder(
+                      controller: scrollController,
+                      itemCount: AudioPlaybackState.availableReciters.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final ReciterOption r =
+                            AudioPlaybackState.availableReciters[index];
+                        return RadioListTile<int>(
+                          value: r.id,
+                          groupValue: state.reciter.id,
+                          activeColor: AppColors.primaryDeepGreen,
+                          title: Text(
+                            r.name,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: Text(r.style),
+                          onChanged: (_) {
+                            controller.setReciter(r);
+                            ref
+                                .read(appPreferencesProvider.notifier)
+                                .setDefaultReciterId(r.id);
+                            Navigator.of(ctx).pop();
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );

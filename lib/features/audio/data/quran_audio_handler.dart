@@ -56,8 +56,8 @@ class AudioPlaybackState {
 
   static const ReciterOption defaultRecitersFirst = ReciterOption(
     id: 1,
-    name: 'Mishary Rashid Al-Afasy',
-    style: 'Murattal',
+    name: 'Mishary Rashid Al-Afasy (مشاري العفاسي)',
+    style: 'Murattal · 128 kbps',
     baseUrl:
         'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/',
   );
@@ -66,10 +66,73 @@ class AudioPlaybackState {
     defaultRecitersFirst,
     ReciterOption(
       id: 2,
-      name: 'Mahmoud Khalil Al-Husary',
-      style: 'Murattal',
+      name: 'Abdullah Al-Matrood (عبد الله المطرود)',
+      style: 'Murattal · 128 kbps',
+      baseUrl: 'https://download.quranicaudio.com/quran/abdullah_matroud/',
+    ),
+    ReciterOption(
+      id: 3,
+      name: 'Abdul Basit Abdus Samad (عبد الباسط عبد الصمد)',
+      style: 'Murattal · 192 kbps',
+      baseUrl: 'https://download.quranicaudio.com/quran/abdul_basit_murattal/',
+    ),
+    ReciterOption(
+      id: 4,
+      name: 'Abdur-Rahman As-Sudais (عبد الرحمن السديس)',
+      style: 'Haramain · La Mecque',
+      baseUrl:
+          'https://download.quranicaudio.com/quran/abdurrahmaan_as-sudays/',
+    ),
+    ReciterOption(
+      id: 5,
+      name: 'Maher Al-Muaiqly (ماهر المعيقلي)',
+      style: 'Haramain · La Mecque',
+      baseUrl: 'https://download.quranicaudio.com/quran/maher_256/',
+    ),
+    ReciterOption(
+      id: 6,
+      name: 'Saad Al-Ghamdi (سعد الغامدي)',
+      style: 'Murattal · 128 kbps',
+      baseUrl:
+          'https://download.quranicaudio.com/quran/sa3d_al-ghaamidi/complete/',
+    ),
+    ReciterOption(
+      id: 7,
+      name: 'Mahmoud Khalil Al-Husary (محمود خليل الحصري)',
+      style: 'Murattal / Tajweed',
       baseUrl:
           'https://download.quranicaudio.com/quran/mahmood_khaleel_al-husaree/',
+    ),
+    ReciterOption(
+      id: 8,
+      name: 'Mohamed Siddiq Al-Minshawi (محمد صديق المنشاوي)',
+      style: 'Murattal classique',
+      baseUrl:
+          'https://download.quranicaudio.com/quran/muhammad_siddeeq_al-minshaawee/',
+    ),
+    ReciterOption(
+      id: 9,
+      name: 'Saud Ash-Shuraim (سعود الشريم)',
+      style: 'Haramain · La Mecque',
+      baseUrl: 'https://download.quranicaudio.com/quran/sa3ood_al-shuraym/',
+    ),
+    ReciterOption(
+      id: 10,
+      name: 'Yasser Ad-Dossari (ياسر الدوسري)',
+      style: 'Haramain · La Mecque',
+      baseUrl: 'https://download.quranicaudio.com/quran/yasser_ad-dussary/',
+    ),
+    ReciterOption(
+      id: 11,
+      name: 'Abu Bakr Ash-Shatri (أبو بكر الشاطري)',
+      style: 'Murattal · 128 kbps',
+      baseUrl: 'https://download.quranicaudio.com/quran/abu_bakr_ash-shaatree/',
+    ),
+    ReciterOption(
+      id: 12,
+      name: 'Fares Abbad (فارس عباد)',
+      style: 'Murattal · 128 kbps',
+      baseUrl: 'https://download.quranicaudio.com/quran/fares/',
     ),
   ];
 

@@ -8,15 +8,99 @@ enum AppThemeMode {
   sepia,
 }
 
-/// Polices arabes OFL embarquées (RF-03, E16).
+/// Polices arabes OFL (3 embarquées hors ligne + 6 téléchargeables via FontLoader — RF-03, E16, E17).
 enum ArabicFontFamily {
-  amiriQuran('AmiriQuran', 'Amiri Quran'),
-  scheherazadeNew('ScheherazadeNew', 'Scheherazade New'),
-  lateef('Lateef', 'Lateef');
+  amiriQuran(
+    'AmiriQuran',
+    'Amiri Quran',
+    styleDescription: 'Style Naskh coranique classique (embarquée hors ligne)',
+    isBuiltIn: true,
+    estimatedSizeKb: 225,
+  ),
+  scheherazadeNew(
+    'ScheherazadeNew',
+    'Scheherazade New',
+    styleDescription: 'Style Naskh traditionnel SIL (embarquée hors ligne)',
+    isBuiltIn: true,
+    estimatedSizeKb: 489,
+  ),
+  lateef(
+    'Lateef',
+    'Lateef',
+    styleDescription: 'Style Naskh fluide SIL (embarquée hors ligne)',
+    isBuiltIn: true,
+    estimatedSizeKb: 317,
+  ),
+  notoNaskhArabic(
+    'NotoNaskhArabic',
+    'Noto Naskh Arabic',
+    styleDescription: 'Haute lisibilité sur petits écrans Android (OFL)',
+    isBuiltIn: false,
+    downloadUrl:
+        'https://raw.githubusercontent.com/google/fonts/main/ofl/notonaskharabic/NotoNaskhArabic%5Bwght%5D.ttf',
+    estimatedSizeKb: 295,
+  ),
+  harmattan(
+    'Harmattan',
+    'Harmattan (Afrique de l’Ouest)',
+    styleDescription: 'Calligraphie coranique d’Afrique de l’Ouest / Warsh (OFL)',
+    isBuiltIn: false,
+    downloadUrl:
+        'https://raw.githubusercontent.com/google/fonts/main/ofl/harmattan/Harmattan-Regular.ttf',
+    estimatedSizeKb: 310,
+  ),
+  alkalami(
+    'Alkalami',
+    'Alkalami (Sudani / Kano)',
+    styleDescription: 'Calligraphie traditionnelle des manuscrits du Sahel (OFL)',
+    isBuiltIn: false,
+    downloadUrl:
+        'https://raw.githubusercontent.com/google/fonts/main/ofl/alkalami/Alkalami-Regular.ttf',
+    estimatedSizeKb: 240,
+  ),
+  reemKufi(
+    'ReemKufi',
+    'Reem Kufi',
+    styleDescription: 'Calligraphie coufique moderne (OFL)',
+    isBuiltIn: false,
+    downloadUrl:
+        'https://raw.githubusercontent.com/google/fonts/main/ofl/reemkufi/ReemKufi%5Bwght%5D.ttf',
+    estimatedSizeKb: 185,
+  ),
+  arefRuqaa(
+    'ArefRuqaa',
+    'Aref Ruqaa',
+    styleDescription: 'Calligraphie Ruq’ah classique (OFL)',
+    isBuiltIn: false,
+    downloadUrl:
+        'https://raw.githubusercontent.com/google/fonts/main/ofl/arefruqaa/ArefRuqaa-Regular.ttf',
+    estimatedSizeKb: 190,
+  ),
+  mirza(
+    'Mirza',
+    'Mirza',
+    styleDescription: 'Calligraphie orientale Naskh/Nastaliq (OFL)',
+    isBuiltIn: false,
+    downloadUrl:
+        'https://raw.githubusercontent.com/google/fonts/main/ofl/mirza/Mirza-Regular.ttf',
+    estimatedSizeKb: 260,
+  );
 
-  const ArabicFontFamily(this.fontFamily, this.displayName);
+  const ArabicFontFamily(
+    this.fontFamily,
+    this.displayName, {
+    required this.styleDescription,
+    required this.isBuiltIn,
+    required this.estimatedSizeKb,
+    this.downloadUrl,
+  });
+
   final String fontFamily;
   final String displayName;
+  final String styleDescription;
+  final bool isBuiltIn;
+  final int estimatedSizeKb;
+  final String? downloadUrl;
 }
 
 class AppTheme {

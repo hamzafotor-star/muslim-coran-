@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/fonts/font_download_service.dart';
 import '../../../core/providers/app_preferences_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../audio/data/quran_audio_handler.dart';
+import '../../quran/domain/utils/arabic_normalizer.dart';
 import '../data/download_manager_service.dart';
 
 /// E17 — Téléchargements hors ligne :
-/// - Deux onglets : `[Audio][Traductions]`.
-/// - Téléchargement par sourate ou en lot, avec pause et reprise.
-/// - Option « Wi-Fi uniquement » pour économiser les données mobiles.
-/// - Affichage clair de la taille avant téléchargement et de l'espace total utilisé.
+/// - Trois onglets : `[Audio (12 Récitateurs)][Polices Arabes][Traductions]`.
+/// - Choix du récitateur (dont Abdullah Al-Matrood, Mishary Al-Afasy, Abdul Basit, etc.)
+///   et téléchargement par sourate ou en lot avec pause et reprise.
+/// - Téléchargement à la demande de 6 polices coraniques OFL supplémentaires via `FontLoader`.
 class DownloadsScreen extends ConsumerStatefulWidget {
   const DownloadsScreen({super.key});
 
@@ -21,11 +25,12 @@ class DownloadsScreen extends ConsumerStatefulWidget {
 class _DownloadsScreenState extends ConsumerState<DownloadsScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  int? _selectedReciterId;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -43,6 +48,13 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen>
         ref.read(downloadManagerProvider.notifier);
     final AppPreferencesState prefs = ref.watch(appPreferencesProvider);
 
+    final int activeReciterId = _selectedReciterId ?? prefs.defaultReciterId;
+    final ReciterOption activeReciter = AudioPlaybackState.availableReciters
+        .firstWhere(
+          (ReciterOption r) => r.id == activeReciterId,
+          orElse: () => AudioPlaybackState.defaultRecitersFirst,
+        );
+
     final double usedMb = notifier.totalDownloadedBytes / (1024 * 1024);
 
     return Scaffold(
@@ -53,6 +65,7 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen>
           indicatorColor: AppColors.accentSoftGold,
           tabs: const <Widget>[
             Tab(text: 'Audio'),
+            Tab(text: 'Polices'),
             Tab(text: 'Traductions'),
           ],
         ),
@@ -74,7 +87,8 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen>
             child: TabBarView(
               controller: _tabController,
               children: <Widget>[
-                _buildAudioTab(tasks, notifier),
+                _buildAudioTab(activeReciter, tasks, notifier),
+                _buildFontsTab(prefs),
                 _buildTranslationsTab(),
               ],
             ),
@@ -94,11 +108,16 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen>
   }
 
   Widget _buildAudioTab(
+    ReciterOption activeReciter,
     Map<String, SurahDownloadTask> tasks,
     DownloadManagerNotifier notifier,
   ) {
-    final List<MapEntry<String, SurahDownloadTask>> entries =
-        tasks.entries.toList(growable: false);
+    final List<MapEntry<String, SurahDownloadTask>> entries = tasks.entries
+        .where(
+          (MapEntry<String, SurahDownloadTask> e) =>
+              e.value.reciterId == activeReciter.id,
+        )
+        .toList(growable: false);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -107,33 +126,79 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen>
           color: AppColors.secondaryLightGreen.withOpacity(0.45),
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        'Mishary Rashid Al-Afasy',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text('Sélection de sourates · Murattal 128 kbps'),
-                    ],
+                const Text(
+                  'Choisir le récitateur à télécharger :',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primaryDeepGreen,
                   ),
                 ),
-                FilledButton.icon(
-                  onPressed: () {
-                    for (final String key in tasks.keys) {
-                      notifier.startOrResumeDownload(key);
-                    }
+                const SizedBox(height: 8),
+                DropdownButtonFormField<int>(
+                  value: activeReciter.id,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Theme.of(context).cardTheme.color,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  items: AudioPlaybackState.availableReciters
+                      .map(
+                        (ReciterOption r) => DropdownMenuItem<int>(
+                          value: r.id,
+                          child: Text(
+                            r.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (int? newId) {
+                    if (newId == null) return;
+                    setState(() => _selectedReciterId = newId);
+                    ref
+                        .read(appPreferencesProvider.notifier)
+                        .setDefaultReciterId(newId);
+                    final ReciterOption chosen = AudioPlaybackState
+                        .availableReciters
+                        .firstWhere((ReciterOption r) => r.id == newId);
+                    ref
+                        .read(audioControllerProvider.notifier)
+                        .setReciter(chosen);
                   },
-                  icon: const Icon(Icons.download, size: 18),
-                  label: const Text('Tout télécharger'),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        'Style : ${activeReciter.style}',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                    FilledButton.icon(
+                      onPressed: () {
+                        for (final MapEntry<String, SurahDownloadTask> e
+                            in entries) {
+                          notifier.startOrResumeDownload(e.key);
+                        }
+                      },
+                      icon: const Icon(Icons.download, size: 18),
+                      label: const Text('Tout télécharger'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -153,9 +218,11 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Text(
-                        '${task.surahId}. ${task.surahName}',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      Expanded(
+                        child: Text(
+                          '${task.surahId}. ${task.surahName}',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
                       ),
                       _buildTaskTrailing(key, task, notifier),
                     ],
@@ -177,7 +244,147 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen>
                     const SizedBox(height: 6),
                     Text(
                       task.errorMessage!,
-                      style: TextStyle(color: Colors.red.shade700, fontSize: 12),
+                      style:
+                          TextStyle(color: Colors.red.shade700, fontSize: 12),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildFontsTab(AppPreferencesState prefs) {
+    final Map<ArabicFontFamily, FontDownloadItemState> fontStates =
+        ref.watch(fontDownloadProvider);
+    final FontDownloadNotifier fontNotifier =
+        ref.read(fontDownloadProvider.notifier);
+    final AppPreferencesNotifier prefsNotifier =
+        ref.read(appPreferencesProvider.notifier);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: <Widget>[
+        const Padding(
+          padding: EdgeInsets.only(bottom: 8),
+          child: Text(
+            'Polices coraniques et arabes (SIL Open Font License 1.1)',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.primaryDeepGreen,
+            ),
+          ),
+        ),
+        ...ArabicFontFamily.values.map((ArabicFontFamily font) {
+          final FontDownloadItemState item = fontStates[font] ??
+              FontDownloadItemState(
+                font: font,
+                status: font.isBuiltIn
+                    ? FontInstallStatus.builtIn
+                    : FontInstallStatus.notInstalled,
+              );
+          final bool isSelected = prefs.arabicFont == font;
+
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              font.displayName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${font.styleDescription} · ~${font.estimatedSizeKb} Ko',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      if (item.status == FontInstallStatus.downloading)
+                        SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            value: item.progress,
+                            strokeWidth: 3,
+                            color: AppColors.primaryDeepGreen,
+                          ),
+                        )
+                      else if (item.isReady)
+                        isSelected
+                            ? const Chip(
+                                avatar: Icon(
+                                  Icons.check_circle,
+                                  size: 18,
+                                  color: AppColors.primaryDeepGreen,
+                                ),
+                                label: Text('Active'),
+                              )
+                            : FilledButton.tonal(
+                                onPressed: () =>
+                                    prefsNotifier.setArabicFont(font),
+                                child: const Text('Activer'),
+                              )
+                      else
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            final bool ok =
+                                await fontNotifier.downloadAndLoadFont(font);
+                            if (ok) {
+                              prefsNotifier.setArabicFont(font);
+                            }
+                          },
+                          icon: const Icon(Icons.download_outlined, size: 18),
+                          label: const Text('Télécharger'),
+                        ),
+                    ],
+                  ),
+                  if (item.isReady) ...<Widget>[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondaryLightGreen.withOpacity(0.28),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        ArabicNormalizer.basmalaUthmani,
+                        textDirection: TextDirection.rtl,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: font.fontFamily,
+                          fontSize: 22,
+                          height: 1.7,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (item.errorMessage != null) ...<Widget>[
+                    const SizedBox(height: 6),
+                    Text(
+                      item.errorMessage!,
+                      style:
+                          TextStyle(color: Colors.red.shade700, fontSize: 12),
                     ),
                   ],
                 ],
@@ -236,7 +443,8 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen>
       children: const <Widget>[
         Card(
           child: ListTile(
-            leading: Icon(Icons.check_circle, color: AppColors.primaryDeepGreen),
+            leading:
+                Icon(Icons.check_circle, color: AppColors.primaryDeepGreen),
             title: Text('Français — Muhammad Hamidullah'),
             subtitle: Text('Inclus hors ligne dans quran.db (Tanzil.net)'),
             trailing: Text('Installé ✓'),
@@ -244,7 +452,8 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen>
         ),
         Card(
           child: ListTile(
-            leading: Icon(Icons.check_circle, color: AppColors.primaryDeepGreen),
+            leading:
+                Icon(Icons.check_circle, color: AppColors.primaryDeepGreen),
             title: Text('Anglais / Translittération phonétique'),
             subtitle: Text('Inclus hors ligne dans quran.db (Tanzil.net)'),
             trailing: Text('Installé ✓'),
