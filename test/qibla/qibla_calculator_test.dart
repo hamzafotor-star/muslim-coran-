@@ -12,11 +12,11 @@ void main() {
     });
 
     test(
-      'Depuis Ouagadougou (12.3714° N, -1.5197° O), l’azimut du grand cercle est ≈ 67.1° NE (et distance ≈ 4 450 km)',
+      'Depuis Ouagadougou (12.3714° N, -1.5197° O), l’azimut du grand cercle est ≈ 71.39° ENE (et distance ≈ 4 438 km)',
       () {
         // Note documentée (§7) : la maquette E13 illustre "62° NE / 4 450 km" à titre d'exemple visuel ;
         // la formule trigonométrique exacte du grand cercle depuis Ouagadougou (12.3714, -1.5197)
-        // vers la Kaaba (21.4225, 39.8262) donne θ ≈ 67.12° NE et d ≈ 4 438 km.
+        // vers la Kaaba (21.4225, 39.8262) donne θ = 71.39° (ENE) et d ≈ 4 438 km.
         final double bearing = QiblaCalculator.calculateQiblaBearing(
           latitude: 12.3714,
           longitude: -1.5197,
@@ -26,8 +26,8 @@ void main() {
           longitude: -1.5197,
         );
 
-        expect(bearing, closeTo(67.12, 0.5));
-        expect(QiblaCalculator.cardinalDirection(bearing), 'NE');
+        expect(bearing, closeTo(71.39, 0.2));
+        expect(QiblaCalculator.cardinalDirection(bearing), 'E');
         expect(distKm, closeTo(4438.0, 25.0));
       },
     );

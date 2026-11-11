@@ -84,10 +84,10 @@ function main() {
   const ouagaBearing = calculateQiblaBearing(12.3714, -1.5197);
   const parisBearing = calculateQiblaBearing(48.8566, 2.3522);
   assert.equal(meccaBearing, 0.0);
-  assert.ok(Math.abs(ouagaBearing - 67.12) < 0.5, `Ouaga bearing=${ouagaBearing}`);
-  assert.ok(Math.abs(parisBearing - 119.16) < 0.5, `Paris bearing=${parisBearing}`);
+  assert.ok(Math.abs(ouagaBearing - 71.39) < 0.2, `Ouaga bearing=${ouagaBearing}`);
+  assert.ok(Math.abs(parisBearing - 119.16) < 0.2, `Paris bearing=${parisBearing}`);
   console.log(
-    `  [OK] Angles Qibla : La Mecque=${meccaBearing.toFixed(1)}°, Ouagadougou=${ouagaBearing.toFixed(2)}° NE, Paris=${parisBearing.toFixed(2)}° SE`
+    `  [OK] Angles Qibla : La Mecque=${meccaBearing.toFixed(1)}°, Ouagadougou=${ouagaBearing.toFixed(2)}° ENE, Paris=${parisBearing.toFixed(2)}° SE`
   );
 
   console.log('=== 5. Audit de sécurité des permissions AndroidManifest.xml ===');
