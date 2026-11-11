@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
-import '../../../../core/database/database_service.dart';
-import '../../../quran/domain/entities/ayah.dart';
-import '../../../quran/domain/utils/arabic_normalizer.dart';
+import '../../../core/database/database_service.dart';
+import '../../quran/domain/entities/ayah.dart';
+import '../../quran/domain/utils/arabic_normalizer.dart';
 
 enum SearchScope {
   arabic,

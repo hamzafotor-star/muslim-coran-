@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
-import '../../../../core/database/database_service.dart';
-import '../../../quran/data/quran_repository.dart';
-import '../../../quran/domain/entities/ayah.dart';
+import '../../../core/database/database_service.dart';
+import '../../quran/data/quran_repository.dart';
+import '../../quran/domain/entities/ayah.dart';
 import '../domain/entities/bookmark_item.dart';
 
 /// Dépôt de données pour les signets, les notes personnelles et la position

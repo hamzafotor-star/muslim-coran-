@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:muslim_coran/core/providers/app_preferences_provider.dart';
@@ -31,8 +32,12 @@ void main() {
         await tester.pumpWidget(
           const ProviderScope(
             child: MaterialApp(
+              locale: Locale('fr'),
               localizationsDelegates: <LocalizationsDelegate<dynamic>>[
                 AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
               ],
               supportedLocales: AppLocalizations.supportedLocales,
               home: MoreMenuScreen(),
@@ -52,8 +57,12 @@ void main() {
         await tester.pumpWidget(
           const ProviderScope(
             child: MaterialApp(
+              locale: Locale('fr'),
               localizationsDelegates: <LocalizationsDelegate<dynamic>>[
                 AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
               ],
               supportedLocales: AppLocalizations.supportedLocales,
               home: SettingsScreen(),

@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../bookmarks/data/bookmark_repository.dart';
-import '../domain/entities/ayah.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../bookmarks/data/bookmark_repository.dart';
+import '../../domain/entities/ayah.dart';
 
 /// E08 — Menu d'un verset (feuille du bas) :
 /// - Écouter ce verset

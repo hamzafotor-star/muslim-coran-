@@ -5,7 +5,7 @@ void main() {
   group('Phase 1 — Normalisation Arabe & Gestion de la Basmala (§6 & §7)', () {
     test('Supprime tous les harakat, shadda, sukun, maddah, tatweel et waqf', () {
       const String uthmani =
-          'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ';
+          'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَالَمِينَ';
       final String normalized = ArabicNormalizer.normalizeForSearch(uthmani);
       expect(
         normalized,

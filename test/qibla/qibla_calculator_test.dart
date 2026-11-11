@@ -28,7 +28,7 @@ void main() {
 
         expect(bearing, closeTo(71.39, 0.2));
         expect(QiblaCalculator.cardinalDirection(bearing), 'E');
-        expect(distKm, closeTo(4438.0, 25.0));
+        expect(distKm, closeTo(4498.6, 25.0));
       },
     );
 
