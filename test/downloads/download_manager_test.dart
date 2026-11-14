@@ -24,6 +24,19 @@ void main() {
         manager.state[matroodFatihaKey]!.url,
         'https://download.quranicaudio.com/quran/abdullah_matroud/001.mp3',
       );
+      expect(
+        AudioPlaybackState.availableReciters[0].ayahAudioUrl(1, 7),
+        'https://everyayah.com/data/Alafasy_128kbps/001007.mp3',
+      );
+      expect(
+        AudioPlaybackState.availableReciters[1].ayahAudioUrl(2, 286),
+        'https://everyayah.com/data/Abdullah_Matroud_128kbps/002286.mp3',
+      );
+      expect(
+        AudioPlaybackState.availableReciters
+            .every((ReciterOption r) => r.everyAyahFolder.isNotEmpty),
+        isTrue,
+      );
       expect(manager.state[fatihaKey]!.status, DownloadItemStatus.queued);
       expect(manager.totalDownloadedBytes, 0);
 

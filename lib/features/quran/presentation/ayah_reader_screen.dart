@@ -45,6 +45,8 @@ class _AyahReaderScreenState extends ConsumerState<AyahReaderScreen> {
 
   final ScrollController _scrollController = ScrollController();
   final Map<int, GlobalKey> _ayahKeys = <int, GlobalKey>{};
+  final Map<int, double> _measuredItemHeights = <int, double>{};
+  int _scrollToken = 0;
 
   @override
   void initState() {
@@ -126,63 +128,181 @@ class _AyahReaderScreenState extends ConsumerState<AyahReaderScreen> {
   }
 
   void _goToSurah(int nextSurahId) {
+    _switchToSurah(nextSurahId, initialAyah: 1);
+  }
+
+  void _switchToSurah(int nextSurahId, {int initialAyah = 1}) {
     final int targetSurahId = nextSurahId.clamp(1, 114);
     if (targetSurahId == _currentSurahId) return;
 
+    _scrollToken++;
     setState(() {
       _currentSurahId = targetSurahId;
       _loading = true;
-      _highlightedAyahNumber = 1;
+      _highlightedAyahNumber = initialAyah;
       _lastSavedAyahId = null;
       _ayahKeys.clear();
+      _measuredItemHeights.clear();
     });
 
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(0);
     }
-    _loadSurahAndAyahs(targetAyahNumber: 1);
+    _loadSurahAndAyahs(targetAyahNumber: initialAyah);
+  }
+
+  void _captureMeasuredItemHeights() {
+    for (final MapEntry<int, GlobalKey> entry in _ayahKeys.entries) {
+      final BuildContext? ctx = entry.value.currentContext;
+      if (ctx == null || !ctx.mounted) continue;
+      final RenderObject? renderObj = ctx.findRenderObject();
+      if (renderObj is RenderBox && renderObj.hasSize) {
+        _measuredItemHeights[entry.key] = renderObj.size.height + 8.0;
+      }
+    }
+  }
+
+  double _averageMeasuredHeight() {
+    if (_measuredItemHeights.isEmpty) return 180.0;
+    double sum = 0;
+    for (final double h in _measuredItemHeights.values) {
+      sum += h;
+    }
+    return (sum / _measuredItemHeights.length).clamp(80.0, 600.0);
+  }
+
+  double _estimatedListOffset(int targetIdx, double maxScroll) {
+    if (targetIdx <= 0 || _ayahs.isEmpty) return 0.0;
+    if (_measuredItemHeights.isEmpty) {
+      final double ratio =
+          _ayahs.length > 1 ? targetIdx / (_ayahs.length - 1) : 0.0;
+      return (ratio * maxScroll).clamp(0.0, maxScroll);
+    }
+    final double avg = _averageMeasuredHeight();
+    double offset = 0.0;
+    for (int i = 0; i < targetIdx && i < _ayahs.length; i++) {
+      offset += _measuredItemHeights[_ayahs[i].ayahNumber] ?? avg;
+    }
+    return offset.clamp(0.0, maxScroll);
+  }
+
+  double _estimatedMushafOffset(int targetIdx, double maxScroll) {
+    if (targetIdx <= 0 || _ayahs.length <= 1) return 0.0;
+    int charsBefore = 0;
+    int totalChars = 0;
+    for (int i = 0; i < _ayahs.length; i++) {
+      final int len = _ayahs[i].displayArabicText.length + 6;
+      if (i < targetIdx) {
+        charsBefore += len;
+      }
+      totalChars += len;
+    }
+    if (totalChars <= 0) {
+      return ((targetIdx / (_ayahs.length - 1)) * maxScroll)
+          .clamp(0.0, maxScroll);
+    }
+    return ((charsBefore / totalChars) * maxScroll).clamp(0.0, maxScroll);
   }
 
   Future<void> _scrollToAyah(int ayahNumber) async {
     if (!mounted || _ayahs.isEmpty) return;
+    final int token = ++_scrollToken;
 
-    final GlobalKey? key = _ayahKeys[ayahNumber];
-    final BuildContext? ctx = key?.currentContext;
-    if (ctx != null && ctx.mounted) {
+    _captureMeasuredItemHeights();
+
+    final BuildContext? directCtx = _ayahKeys[ayahNumber]?.currentContext;
+    if (directCtx != null && directCtx.mounted) {
       await Scrollable.ensureVisible(
-        ctx,
+        directCtx,
         duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOut,
-        alignment: 0.25,
+        curve: Curves.easeOutCubic,
+        alignment: 0.22,
       );
       return;
     }
 
     if (!_scrollController.hasClients) return;
-    final int idx =
+    final int targetIdx =
         _ayahs.indexWhere((Ayah a) => a.ayahNumber == ayahNumber);
-    if (idx < 0) return;
+    if (targetIdx < 0) return;
 
-    final double maxScroll = _scrollController.position.maxScrollExtent;
-    if (maxScroll <= 0 || _ayahs.length <= 1) return;
-
-    final double ratio = idx / (_ayahs.length - 1);
-    final double targetOffset = (ratio * maxScroll).clamp(0.0, maxScroll);
-    await _scrollController.animateTo(
-      targetOffset,
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeInOut,
-    );
-    if (!mounted) return;
-    final BuildContext? refinedCtx = _ayahKeys[ayahNumber]?.currentContext;
-    if (refinedCtx != null && refinedCtx.mounted) {
-      await Scrollable.ensureVisible(
-        refinedCtx,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOut,
-        alignment: 0.25,
+    final bool isMushaf = ref.read(appPreferencesProvider).isMushafPageMode;
+    if (isMushaf) {
+      final double maxScroll = _scrollController.position.maxScrollExtent;
+      if (maxScroll <= 0 || _ayahs.length <= 1) return;
+      final double targetOffset = _estimatedMushafOffset(targetIdx, maxScroll);
+      await _scrollController.animateTo(
+        targetOffset,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
       );
+      return;
     }
+
+    for (int attempt = 0; attempt < 6; attempt++) {
+      if (!mounted || token != _scrollToken || !_scrollController.hasClients) {
+        return;
+      }
+      final BuildContext? ctx = _ayahKeys[ayahNumber]?.currentContext;
+      if (ctx != null && ctx.mounted) {
+        break;
+      }
+
+      _captureMeasuredItemHeights();
+      final double maxScroll = _scrollController.position.maxScrollExtent;
+      if (maxScroll <= 0) break;
+
+      final double currentPixels = _scrollController.position.pixels;
+      double nextOffset;
+
+      if (attempt == 0) {
+        nextOffset = _estimatedListOffset(targetIdx, maxScroll);
+      } else {
+        int? minMountedIdx;
+        int? maxMountedIdx;
+        for (int i = 0; i < _ayahs.length; i++) {
+          if (_ayahKeys[_ayahs[i].ayahNumber]?.currentContext != null) {
+            minMountedIdx ??= i;
+            maxMountedIdx = i;
+          }
+        }
+        final double avgHeight = _averageMeasuredHeight();
+        if (maxMountedIdx != null && targetIdx > maxMountedIdx) {
+          final int deltaItems = targetIdx - maxMountedIdx;
+          nextOffset =
+              (currentPixels + deltaItems * avgHeight).clamp(0.0, maxScroll);
+        } else if (minMountedIdx != null && targetIdx < minMountedIdx) {
+          final int deltaItems = minMountedIdx - targetIdx;
+          nextOffset =
+              (currentPixels - deltaItems * avgHeight).clamp(0.0, maxScroll);
+        } else {
+          nextOffset = _estimatedListOffset(targetIdx, maxScroll);
+        }
+      }
+
+      if ((nextOffset - currentPixels).abs() < 4.0) {
+        nextOffset = targetIdx > 0
+            ? (currentPixels + 220.0).clamp(0.0, maxScroll)
+            : 0.0;
+      }
+
+      _scrollController.jumpTo(nextOffset);
+      await WidgetsBinding.instance.endOfFrame;
+    }
+
+    if (!mounted || token != _scrollToken) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || token != _scrollToken) return;
+      final BuildContext? refinedCtx = _ayahKeys[ayahNumber]?.currentContext;
+      if (refinedCtx != null && refinedCtx.mounted) {
+        Scrollable.ensureVisible(
+          refinedCtx,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOutCubic,
+          alignment: 0.22,
+        );
+      }
+    });
   }
 
   bool _handleScrollEnd(ScrollEndNotification notification) {
@@ -412,16 +532,33 @@ class _AyahReaderScreenState extends ConsumerState<AyahReaderScreen> {
     ref.listen<AudioPlaybackState>(
       audioControllerProvider,
       (AudioPlaybackState? prev, AudioPlaybackState next) {
-        if (next.currentSurahId == _currentSurahId && next.isPlaying) {
+        if (next.isVisible &&
+            next.isPlaying &&
+            next.currentSurahId != _currentSurahId &&
+            prev?.currentSurahId != next.currentSurahId) {
+          _switchToSurah(
+            next.currentSurahId,
+            initialAyah: next.currentAyahNumber,
+          );
+          return;
+        }
+
+        if (next.currentSurahId == _currentSurahId &&
+            next.isVisible &&
+            (next.isPlaying ||
+                next.currentAyahNumber != prev?.currentAyahNumber)) {
           final bool ayahChanged =
-              next.currentAyahNumber != prev?.currentAyahNumber;
+              next.currentAyahNumber != _highlightedAyahNumber ||
+                  next.currentAyahNumber != prev?.currentAyahNumber;
           final bool newlyPlayingThisSurah =
               prev?.currentSurahId != _currentSurahId ||
-                  !(prev?.isPlaying ?? false);
+                  (next.isPlaying && !(prev?.isPlaying ?? false));
           if (ayahChanged || newlyPlayingThisSurah) {
-            setState(() {
-              _highlightedAyahNumber = next.currentAyahNumber;
-            });
+            if (_highlightedAyahNumber != next.currentAyahNumber) {
+              setState(() {
+                _highlightedAyahNumber = next.currentAyahNumber;
+              });
+            }
             if (_ayahs.isNotEmpty) {
               final Ayah activeAyah = _ayahs.firstWhere(
                 (Ayah a) => a.ayahNumber == next.currentAyahNumber,
@@ -835,6 +972,7 @@ class _AyahReaderScreenState extends ConsumerState<AyahReaderScreen> {
 
     return ListView.builder(
       controller: _scrollController,
+      cacheExtent: 600,
       padding: const EdgeInsets.all(16),
       itemCount: totalItems,
       itemBuilder: (BuildContext context, int index) {

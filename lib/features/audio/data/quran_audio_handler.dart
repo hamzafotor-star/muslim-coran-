@@ -23,16 +23,26 @@ class ReciterOption {
     required this.name,
     required this.style,
     required this.baseUrl,
+    required this.everyAyahFolder,
   });
 
   final int id;
   final String name;
   final String style;
   final String baseUrl;
+  final String everyAyahFolder;
 
   String surahAudioUrl(int surahId) {
     final String padded = surahId.clamp(1, 114).toString().padLeft(3, '0');
     return '$baseUrl$padded.mp3';
+  }
+
+  String ayahAudioUrl(int surahId, int ayahNumber) {
+    final String paddedSurah =
+        surahId.clamp(1, 114).toString().padLeft(3, '0');
+    final String paddedAyah =
+        ayahNumber.clamp(1, 286).toString().padLeft(3, '0');
+    return 'https://everyayah.com/data/$everyAyahFolder/$paddedSurah$paddedAyah.mp3';
   }
 }
 
@@ -82,6 +92,7 @@ class AudioPlaybackState {
     style: 'Murattal · 128 kbps',
     baseUrl:
         'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/',
+    everyAyahFolder: 'Alafasy_128kbps',
   );
 
   static const List<ReciterOption> availableReciters = <ReciterOption>[
@@ -91,12 +102,14 @@ class AudioPlaybackState {
       name: 'Abdullah Al-Matrood (عبد الله المطرود)',
       style: 'Murattal · 128 kbps',
       baseUrl: 'https://download.quranicaudio.com/quran/abdullah_matroud/',
+      everyAyahFolder: 'Abdullah_Matroud_128kbps',
     ),
     ReciterOption(
       id: 3,
       name: 'Abdul Basit Abdus Samad (عبد الباسط عبد الصمد)',
       style: 'Murattal · 192 kbps',
       baseUrl: 'https://download.quranicaudio.com/quran/abdul_basit_murattal/',
+      everyAyahFolder: 'Abdul_Basit_Murattal_192kbps',
     ),
     ReciterOption(
       id: 4,
@@ -104,12 +117,14 @@ class AudioPlaybackState {
       style: 'Haramain · La Mecque',
       baseUrl:
           'https://download.quranicaudio.com/quran/abdurrahmaan_as-sudays/',
+      everyAyahFolder: 'Abdurrahmaan_As-Sudais_192kbps',
     ),
     ReciterOption(
       id: 5,
       name: 'Maher Al-Muaiqly (ماهر المعيقلي)',
       style: 'Haramain · La Mecque',
       baseUrl: 'https://download.quranicaudio.com/quran/maher_256/',
+      everyAyahFolder: 'MaherAlMuaiqly128kbps',
     ),
     ReciterOption(
       id: 6,
@@ -117,6 +132,7 @@ class AudioPlaybackState {
       style: 'Murattal · 128 kbps',
       baseUrl:
           'https://download.quranicaudio.com/quran/sa3d_al-ghaamidi/complete/',
+      everyAyahFolder: 'Ghamadi_40kbps',
     ),
     ReciterOption(
       id: 7,
@@ -124,6 +140,7 @@ class AudioPlaybackState {
       style: 'Murattal / Tajweed',
       baseUrl:
           'https://download.quranicaudio.com/quran/mahmood_khaleel_al-husaree/',
+      everyAyahFolder: 'Husary_128kbps',
     ),
     ReciterOption(
       id: 8,
@@ -131,30 +148,35 @@ class AudioPlaybackState {
       style: 'Murattal classique',
       baseUrl:
           'https://download.quranicaudio.com/quran/muhammad_siddeeq_al-minshaawee/',
+      everyAyahFolder: 'Minshawy_Murattal_128kbps',
     ),
     ReciterOption(
       id: 9,
       name: 'Saud Ash-Shuraim (سعود الشريم)',
       style: 'Haramain · La Mecque',
       baseUrl: 'https://download.quranicaudio.com/quran/sa3ood_al-shuraym/',
+      everyAyahFolder: 'Saood_ash-Shuraym_128kbps',
     ),
     ReciterOption(
       id: 10,
       name: 'Yasser Ad-Dossari (ياسر الدوسري)',
       style: 'Haramain · La Mecque',
       baseUrl: 'https://download.quranicaudio.com/quran/yasser_ad-dussary/',
+      everyAyahFolder: 'Yasser_Ad-Dussary_128kbps',
     ),
     ReciterOption(
       id: 11,
       name: 'Abu Bakr Ash-Shatri (أبو بكر الشاطري)',
       style: 'Murattal · 128 kbps',
       baseUrl: 'https://download.quranicaudio.com/quran/abu_bakr_ash-shaatree/',
+      everyAyahFolder: 'Abu_Bakr_Ash-Shaatree_128kbps',
     ),
     ReciterOption(
       id: 12,
       name: 'Fares Abbad (فارس عباد)',
       style: 'Murattal · 128 kbps',
       baseUrl: 'https://download.quranicaudio.com/quran/fares/',
+      everyAyahFolder: 'Fares_Abbad_64kbps',
     ),
   ];
 
@@ -230,22 +252,21 @@ class AudioController extends StateNotifier<AudioPlaybackState> {
   final AudioPlayer _player = AudioPlayer();
   Timer? _sleepTimer;
   bool _handlingCompletion = false;
+  bool _isUsingVersePlaylist = true;
+  bool _isPreparingSource = false;
+  int _playRequestId = 0;
 
   void _initPlayerStreams() {
     _player.positionStream.listen((Duration pos) {
       if (!mounted) return;
-      if (state.isPlaying && state.duration.inMilliseconds > 0) {
-        final int computedAyah =
-            ((pos.inMilliseconds / state.duration.inMilliseconds) *
-                        state.totalAyahsInSurah)
-                    .floor() +
-                1;
-        state = state.copyWith(
-          position: pos,
-          currentAyahNumber: computedAyah.clamp(1, state.totalAyahsInSurah),
-        );
-      } else {
-        state = state.copyWith(position: pos);
+      state = state.copyWith(position: pos);
+    });
+    _player.currentIndexStream.listen((int? index) {
+      if (!mounted || _isPreparingSource || !_isUsingVersePlaylist) return;
+      if (index == null) return;
+      final int exactAyah = (index + 1).clamp(1, state.totalAyahsInSurah);
+      if (state.currentAyahNumber != exactAyah) {
+        state = state.copyWith(currentAyahNumber: exactAyah);
       }
     });
     _player.durationStream.listen((Duration? dur) {
@@ -258,7 +279,12 @@ class AudioController extends StateNotifier<AudioPlaybackState> {
       if (ps.processingState == ProcessingState.completed) {
         if (state.repeatMode == RepeatPlaybackMode.surah ||
             state.repeatMode == RepeatPlaybackMode.ayah) {
-          _player.seek(Duration.zero);
+          if (_isUsingVersePlaylist &&
+              state.repeatMode == RepeatPlaybackMode.surah) {
+            _player.seek(Duration.zero, index: 0);
+          } else {
+            _player.seek(Duration.zero);
+          }
           _player.play();
         } else if (state.currentSurahId < 114 && !_handlingCompletion) {
           _handlingCompletion = true;
@@ -270,6 +296,21 @@ class AudioController extends StateNotifier<AudioPlaybackState> {
         }
       }
     });
+  }
+
+  Future<void> _applyLoopMode(RepeatPlaybackMode mode) async {
+    final LoopMode loopMode;
+    switch (mode) {
+      case RepeatPlaybackMode.off:
+        loopMode = LoopMode.off;
+      case RepeatPlaybackMode.surah:
+        loopMode = LoopMode.all;
+      case RepeatPlaybackMode.ayah:
+        loopMode = LoopMode.one;
+    }
+    try {
+      await _player.setLoopMode(loopMode);
+    } catch (_) {}
   }
 
   int _targetMsForAyah(int ayahNumber, int totalAyahs, int durationMs) {
@@ -285,6 +326,7 @@ class AudioController extends StateNotifier<AudioPlaybackState> {
     int activeAyahNumber = 1,
     int? totalAyahs,
   }) async {
+    final int requestId = ++_playRequestId;
     final int resolvedSurahId = surahId.clamp(1, 114);
     final int resolvedTotal = (totalAyahs != null && totalAyahs > 0)
         ? totalAyahs
@@ -298,41 +340,113 @@ class AudioController extends StateNotifier<AudioPlaybackState> {
       currentSurahName: surahName,
       currentAyahNumber: resolvedAyah,
       totalAyahsInSurah: resolvedTotal,
+      position: Duration.zero,
       clearError: true,
     );
 
     try {
       final Directory appDir = await getApplicationDocumentsDirectory();
-      final String padded = resolvedSurahId.toString().padLeft(3, '0');
-      final File localFile = File(
-        p.join(appDir.path, 'audio', 'reciter_${state.reciter.id}', '$padded.mp3'),
+      if (!mounted || requestId != _playRequestId) return;
+
+      final String paddedSurah = resolvedSurahId.toString().padLeft(3, '0');
+      final Directory surahDir = Directory(
+        p.join(appDir.path, 'audio', 'reciter_${state.reciter.id}', paddedSurah),
+      );
+      final File legacyLocalFile = File(
+        p.join(
+          appDir.path,
+          'audio',
+          'reciter_${state.reciter.id}',
+          '$paddedSurah.mp3',
+        ),
       );
 
-      Duration? loadedDuration;
-      if (localFile.existsSync()) {
-        state = state.copyWith(isOfflineFile: true);
-        loadedDuration = await _player.setFilePath(localFile.path);
-      } else {
-        state = state.copyWith(isOfflineFile: false);
-        loadedDuration =
-            await _player.setUrl(state.reciter.surahAudioUrl(resolvedSurahId));
-      }
-      if (loadedDuration != null && loadedDuration.inMilliseconds > 0) {
-        state = state.copyWith(duration: loadedDuration);
-        if (resolvedAyah > 1) {
-          final int targetMs = _targetMsForAyah(
-            resolvedAyah,
-            resolvedTotal,
-            loadedDuration.inMilliseconds,
+      bool allAyahsOffline = true;
+      final List<AudioSource> ayahSources = <AudioSource>[];
+      for (int ayahNum = 1; ayahNum <= resolvedTotal; ayahNum++) {
+        final String paddedAyah = ayahNum.toString().padLeft(3, '0');
+        final File localAyahFile = File(
+          p.join(surahDir.path, '$paddedAyah.mp3'),
+        );
+        if (localAyahFile.existsSync() && localAyahFile.lengthSync() > 100) {
+          ayahSources.add(
+            AudioSource.file(localAyahFile.path, tag: ayahNum),
           );
-          final Duration targetPos = Duration(milliseconds: targetMs);
-          state = state.copyWith(position: targetPos);
-          await _player.seek(targetPos);
+        } else {
+          allAyahsOffline = false;
+          ayahSources.add(
+            AudioSource.uri(
+              Uri.parse(state.reciter.ayahAudioUrl(resolvedSurahId, ayahNum)),
+              tag: ayahNum,
+            ),
+          );
         }
       }
+
+      final ConcatenatingAudioSource playlist = ConcatenatingAudioSource(
+        useLazyPreparation: true,
+        children: ayahSources,
+      );
+      final int initialIndex = (resolvedAyah - 1).clamp(0, resolvedTotal - 1);
+
+      _isUsingVersePlaylist = true;
+      _isPreparingSource = true;
+      Duration? loadedDuration;
+      try {
+        state = state.copyWith(isOfflineFile: allAyahsOffline);
+        loadedDuration = await _player.setAudioSource(
+          playlist,
+          initialIndex: initialIndex,
+          initialPosition: Duration.zero,
+        );
+        if (!mounted || requestId != _playRequestId) return;
+      } catch (_) {
+        if (!mounted || requestId != _playRequestId) return;
+        if (legacyLocalFile.existsSync() &&
+            legacyLocalFile.lengthSync() > 4096) {
+          _isUsingVersePlaylist = false;
+          state = state.copyWith(isOfflineFile: true, clearError: true);
+          loadedDuration = await _player.setFilePath(legacyLocalFile.path);
+          if (!mounted || requestId != _playRequestId) return;
+          if (loadedDuration != null &&
+              loadedDuration.inMilliseconds > 0 &&
+              resolvedAyah > 1) {
+            final int targetMs = _targetMsForAyah(
+              resolvedAyah,
+              resolvedTotal,
+              loadedDuration.inMilliseconds,
+            );
+            final Duration targetPos = Duration(milliseconds: targetMs);
+            state = state.copyWith(position: targetPos);
+            await _player.seek(targetPos);
+          }
+        } else {
+          rethrow;
+        }
+      } finally {
+        if (requestId == _playRequestId) {
+          _isPreparingSource = false;
+        }
+      }
+
+      if (loadedDuration != null && loadedDuration.inMilliseconds > 0) {
+        state = state.copyWith(duration: loadedDuration);
+      }
+      if (_isUsingVersePlaylist) {
+        final int? currentIdx = _player.currentIndex;
+        if (currentIdx != null) {
+          final int exactAyah =
+              (currentIdx + 1).clamp(1, state.totalAyahsInSurah);
+          if (state.currentAyahNumber != exactAyah) {
+            state = state.copyWith(currentAyahNumber: exactAyah);
+          }
+        }
+      }
+      await _applyLoopMode(state.repeatMode);
       await _player.setSpeed(state.speed);
       await _player.play();
     } catch (_) {
+      if (!mounted || requestId != _playRequestId) return;
       state = state.copyWith(
         isPlaying: false,
         errorMessage:
@@ -381,6 +495,17 @@ class AudioController extends StateNotifier<AudioPlaybackState> {
 
   Future<void> seekToAyah(int ayahNumber) async {
     final int targetAyah = ayahNumber.clamp(1, state.totalAyahsInSurah);
+    if (_isUsingVersePlaylist) {
+      state = state.copyWith(
+        currentAyahNumber: targetAyah,
+        position: Duration.zero,
+      );
+      try {
+        await _player.seek(Duration.zero, index: targetAyah - 1);
+      } catch (_) {}
+      return;
+    }
+
     final int durationMs = state.duration.inMilliseconds;
     if (durationMs > 0) {
       final int targetMs = _targetMsForAyah(
@@ -448,7 +573,9 @@ class AudioController extends StateNotifier<AudioPlaybackState> {
   void cycleRepeatMode() {
     final int nextIdx =
         (state.repeatMode.index + 1) % RepeatPlaybackMode.values.length;
-    state = state.copyWith(repeatMode: RepeatPlaybackMode.values[nextIdx]);
+    final RepeatPlaybackMode nextMode = RepeatPlaybackMode.values[nextIdx];
+    state = state.copyWith(repeatMode: nextMode);
+    _applyLoopMode(nextMode);
   }
 
   void setReciter(ReciterOption reciter) {

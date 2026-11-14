@@ -151,14 +151,49 @@ class DownloadManagerNotifier
       for (final MapEntry<String, SurahDownloadTask> entry in state.entries) {
         final SurahDownloadTask t = entry.value;
         final String padded = t.surahId.toString().padLeft(3, '0');
-        final File localFile = File(
+        final Directory surahDir = Directory(
+          p.join(appDir.path, 'audio', 'reciter_${t.reciterId}', padded),
+        );
+        final int totalAyahs = AudioPlaybackState.ayahCountForSurah(t.surahId);
+
+        if (surahDir.existsSync()) {
+          int downloadedAyahs = 0;
+          for (int ayahNum = 1; ayahNum <= totalAyahs; ayahNum++) {
+            final String paddedAyah = ayahNum.toString().padLeft(3, '0');
+            final File ayahFile = File(
+              p.join(surahDir.path, '$paddedAyah.mp3'),
+            );
+            if (ayahFile.existsSync() && ayahFile.lengthSync() > 100) {
+              downloadedAyahs++;
+            }
+          }
+          if (downloadedAyahs == totalAyahs) {
+            updated[entry.key] = t.copyWith(
+              status: DownloadItemStatus.done,
+              progress: 1.0,
+              localPath: surahDir.path,
+            );
+            changed = true;
+            continue;
+          } else if (downloadedAyahs > 0) {
+            updated[entry.key] = t.copyWith(
+              status: DownloadItemStatus.paused,
+              progress: downloadedAyahs / totalAyahs,
+            );
+            changed = true;
+            continue;
+          }
+        }
+
+        final File legacyLocalFile = File(
           p.join(appDir.path, 'audio', 'reciter_${t.reciterId}', '$padded.mp3'),
         );
-        if (localFile.existsSync() && localFile.lengthSync() > 4096) {
+        if (legacyLocalFile.existsSync() &&
+            legacyLocalFile.lengthSync() > 4096) {
           updated[entry.key] = t.copyWith(
             status: DownloadItemStatus.done,
             progress: 1.0,
-            localPath: localFile.path,
+            localPath: legacyLocalFile.path,
           );
           changed = true;
         }
@@ -207,7 +242,8 @@ class DownloadManagerNotifier
     return sum;
   }
 
-  /// Lance ou reprend le téléchargement d'une sourate avec support de reprise (`Range: bytes=...`).
+  /// Lance ou reprend le téléchargement d'une sourate verset par verset
+  /// (EveryAyah.com) avec pause/reprise au verset près.
   Future<void> startOrResumeDownload(String key) async {
     final SurahDownloadTask? current = state[key];
     if (current == null || current.status == DownloadItemStatus.running) {
@@ -227,57 +263,115 @@ class DownloadManagerNotifier
 
     try {
       final Directory appDir = await getApplicationDocumentsDirectory();
-      final String padded = current.surahId.toString().padLeft(3, '0');
-      final File targetFile = File(
+      final String paddedSurah = current.surahId.toString().padLeft(3, '0');
+      final Directory surahDir = Directory(
         p.join(
           appDir.path,
           'audio',
           'reciter_${current.reciterId}',
-          '$padded.mp3',
+          paddedSurah,
         ),
       );
-      await targetFile.parent.create(recursive: true);
+      await surahDir.create(recursive: true);
 
-      final int existingBytes =
-          targetFile.existsSync() ? targetFile.lengthSync() : 0;
+      final ReciterOption reciter =
+          AudioPlaybackState.availableReciters.firstWhere(
+        (ReciterOption r) => r.id == current.reciterId,
+        orElse: () => AudioPlaybackState.defaultRecitersFirst,
+      );
+      final int totalAyahs =
+          AudioPlaybackState.ayahCountForSurah(current.surahId);
 
-      await _dio.download(
-        current.url,
-        targetFile.path,
-        cancelToken: cancelToken,
-        deleteOnError: false,
-        options: Options(
-          headers: existingBytes > 0
-              ? <String, dynamic>{'Range': 'bytes=$existingBytes-'}
-              : null,
-        ),
-        onReceiveProgress: (int received, int total) {
-          if (total <= 0) return;
-          final double prog =
-              (existingBytes + received) / (existingBytes + total);
+      for (int ayahNum = 1; ayahNum <= totalAyahs; ayahNum++) {
+        if (cancelToken.isCancelled) break;
+
+        final String paddedAyah = ayahNum.toString().padLeft(3, '0');
+        final File targetFile = File(
+          p.join(surahDir.path, '$paddedAyah.mp3'),
+        );
+
+        if (targetFile.existsSync() && targetFile.lengthSync() > 100) {
           final SurahDownloadTask? latest = state[key];
           if (latest != null) {
             state = <String, SurahDownloadTask>{
               ...state,
               key: latest.copyWith(
                 status: DownloadItemStatus.running,
-                progress: prog,
+                progress: ayahNum / totalAyahs,
               ),
             };
           }
-        },
-      );
+          continue;
+        }
+
+        final File tempFile = File('${targetFile.path}.part');
+        if (tempFile.existsSync()) {
+          await tempFile.delete();
+        }
+
+        await _dio.download(
+          reciter.ayahAudioUrl(current.surahId, ayahNum),
+          tempFile.path,
+          cancelToken: cancelToken,
+          deleteOnError: true,
+          onReceiveProgress: (int received, int total) {
+            if (total <= 0 || cancelToken.isCancelled) return;
+            final double ayahFrac = (received / total).clamp(0.0, 1.0);
+            final double prog = ((ayahNum - 1) + ayahFrac) / totalAyahs;
+            final SurahDownloadTask? latest = state[key];
+            if (latest != null) {
+              state = <String, SurahDownloadTask>{
+                ...state,
+                key: latest.copyWith(
+                  status: DownloadItemStatus.running,
+                  progress: prog,
+                ),
+              };
+            }
+          },
+        );
+
+        if (cancelToken.isCancelled) {
+          if (tempFile.existsSync()) {
+            await tempFile.delete();
+          }
+          break;
+        }
+
+        if (targetFile.existsSync()) {
+          await targetFile.delete();
+        }
+        await tempFile.rename(targetFile.path);
+
+        final SurahDownloadTask? latest = state[key];
+        if (latest != null) {
+          state = <String, SurahDownloadTask>{
+            ...state,
+            key: latest.copyWith(
+              status: DownloadItemStatus.running,
+              progress: ayahNum / totalAyahs,
+            ),
+          };
+        }
+      }
 
       final SurahDownloadTask? finished = state[key];
       if (finished != null) {
-        state = <String, SurahDownloadTask>{
-          ...state,
-          key: finished.copyWith(
-            status: DownloadItemStatus.done,
-            progress: 1.0,
-            localPath: targetFile.path,
-          ),
-        };
+        if (cancelToken.isCancelled) {
+          state = <String, SurahDownloadTask>{
+            ...state,
+            key: finished.copyWith(status: DownloadItemStatus.paused),
+          };
+        } else {
+          state = <String, SurahDownloadTask>{
+            ...state,
+            key: finished.copyWith(
+              status: DownloadItemStatus.done,
+              progress: 1.0,
+              localPath: surahDir.path,
+            ),
+          };
+        }
       }
     } on DioException catch (e) {
       final SurahDownloadTask? latest = state[key];
