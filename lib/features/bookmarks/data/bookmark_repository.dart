@@ -155,6 +155,7 @@ class BookmarkRepository {
     required int ayahId,
     int? page,
     String mode = 'ayah',
+    bool recordHistory = true,
   }) async {
     final Database db = await _dbService.userDb;
     final int now = _nowSeconds;
@@ -168,11 +169,45 @@ class BookmarkRepository {
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    await db.insert('reading_history', <String, Object?>{
-      'ayah_id': ayahId,
-      'mode': mode,
-      'read_at': now,
-    });
+    if (recordHistory) {
+      final List<Map<String, Object?>> last = await db.query(
+        'reading_history',
+        columns: <String>['ayah_id'],
+        orderBy: 'id DESC',
+        limit: 1,
+      );
+      final int? lastAyahId =
+          last.isNotEmpty ? (last.first['ayah_id'] as num?)?.toInt() : null;
+      if (lastAyahId != ayahId) {
+        await db.insert('reading_history', <String, Object?>{
+          'ayah_id': ayahId,
+          'mode': mode,
+          'read_at': now,
+        });
+      }
+    }
+  }
+
+  /// Sauvegarde directe de la position de lecture à partir d'une sourate et d'un verset.
+  Future<void> saveReadingPositionForSurah({
+    required int surahId,
+    int ayahNumber = 1,
+    String mode = 'ayah',
+  }) async {
+    final List<Ayah> ayahs = await _quranRepo.getAyahsBySurah(
+      surahId: surahId.clamp(1, 114),
+      translationId: 1,
+    );
+    if (ayahs.isEmpty) return;
+    final Ayah target = ayahs.firstWhere(
+      (Ayah a) => a.ayahNumber == ayahNumber,
+      orElse: () => ayahs.first,
+    );
+    await saveReadingPosition(
+      ayahId: target.id,
+      page: target.page15,
+      mode: mode,
+    );
   }
 
   Future<Ayah?> getCurrentReadingPositionAyah() async {

@@ -3,12 +3,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/islamic_ornaments.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// E15 — Menu « Plus » :
-/// - Les modules de la V1.x (`Dhikr / Tasbih`, `Mémorisation`, `Objectifs (Khatma)`,
-///   `Calendrier hégirien`, `Apprendre (Qaida)`) apparaissent avec la mention « Bientôt ».
-/// - Accès direct à `Téléchargements` (E17), `Réglages` (E16), `Soutenir l'application` et `À propos`.
+/// - En-tête royal « Qurana ».
+/// - Les modules de la V1.x (`Dhikr / Tasbih`, `Mémorisation (Hifz)`,
+///   `Objectifs (Khatma)`, `Calendrier hégirien`, `Apprendre (Qaida)`)
+///   apparaissent avec la mention « Bientôt ».
+/// - Accès direct à `Téléchargements` (E17), `Réglages` (E16),
+///   `Soutenir l'application` et `À propos`.
 class MoreMenuScreen extends StatelessWidget {
   const MoreMenuScreen({super.key});
 
@@ -45,66 +49,101 @@ class MoreMenuScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          l10n.tabMore,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+      appBar: buildRoyalAppBar(
+        title: l10n.tabMore,
+        subtitle: 'Qurana · ${l10n.settings} · ${l10n.downloads}',
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
         children: <Widget>[
+          // Bannière de marque Qurana
+          RoyalPatternBackground(
+            borderRadius: BorderRadius.circular(22),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: <Widget>[
+                  const GoldLogoMedallion(size: 56, glow: false),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const Text(
+                          'Qurana · قرآنا',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.appTagline,
+                          style: const TextStyle(
+                            color: AppColors.goldLight,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
           Card(
             child: ListTile(
-              leading: const Icon(
-                Icons.download_for_offline_outlined,
-                color: AppColors.primaryDeepGreen,
+              leading: const _LeadingIconCircle(
+                icon: Icons.download_for_offline_outlined,
               ),
               title: Text(
                 l10n.downloads,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
               subtitle: const Text(
                 'Gérer les sourates audio et les traductions hors ligne',
               ),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: const Icon(
+                Icons.chevron_right,
+                color: AppColors.accentSoftGold,
+              ),
               onTap: () => context.push(AppRoutes.downloads),
             ),
           ),
           Card(
             child: ListTile(
-              leading: const Icon(
-                Icons.settings_outlined,
-                color: AppColors.primaryDeepGreen,
-              ),
+              leading: const _LeadingIconCircle(icon: Icons.settings_outlined),
               title: Text(
                 l10n.settings,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
               subtitle: const Text(
                 'Langue, thème Clair/Sombre/Sépia, police et taille du texte arabe',
               ),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: const Icon(
+                Icons.chevron_right,
+                color: AppColors.accentSoftGold,
+              ),
               onTap: () => context.push(AppRoutes.settings),
             ),
           ),
-          const SizedBox(height: 12),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            child: Text(
-              'Modules prévus en version V1.x',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryDeepGreen,
-              ),
-            ),
-          ),
+          const SizedBox(height: 8),
+
+          const OrnateSectionTitle(title: 'Modules prévus en version V1.x'),
           ...upcomingModules.map(
             (_V1xFutureModule m) => Card(
               child: ListTile(
                 enabled: false,
                 leading: Icon(m.icon),
-                title: Text(m.title),
+                title: Text(
+                  m.title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
                 subtitle: Text(m.subtitle),
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(
@@ -112,15 +151,15 @@ class MoreMenuScreen extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.secondaryLightGreen,
+                    gradient: AppColors.goldGradient,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     l10n.comingSoon,
                     style: const TextStyle(
                       fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryDeepGreen,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.emeraldNight,
                     ),
                   ),
                 ),
@@ -128,34 +167,38 @@ class MoreMenuScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+
           Card(
             child: ListTile(
-              leading: const Icon(
-                Icons.volunteer_activism_outlined,
-                color: AppColors.accentSoftGold,
+              leading: const _LeadingIconCircle(
+                icon: Icons.volunteer_activism_outlined,
+                gold: true,
               ),
-              title: const Text('Soutenir l’application (Sadaqah Jariyah)'),
+              title: const Text(
+                'Soutenir l’application (Sadaqah Jariyah)',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
               subtitle: const Text(
                 'Application 100 % gratuite, sans publicité ni pistage',
               ),
               onTap: () => _showAboutOrSupportDialog(
                 context,
-                title: 'Soutenir Muslim Coran',
+                title: 'Soutenir Qurana',
                 body:
-                    'Muslim Coran est développé sans aucune publicité ni revente de données personnelles afin de préserver le recueillement pendant la lecture du Saint Coran.\n\n'
+                    'Qurana est développé sans aucune publicité ni revente de données personnelles afin de préserver le recueillement pendant la lecture du Saint Coran.\n\n'
                     'Vous pouvez soutenir le projet en le partageant autour de vous et par vos invocations.',
               ),
             ),
           ),
           Card(
             child: ListTile(
-              leading: const Icon(
-                Icons.info_outline,
-                color: AppColors.primaryDeepGreen,
+              leading: const _LeadingIconCircle(icon: Icons.info_outline),
+              title: const Text(
+                'À propos & Licences',
+                style: TextStyle(fontWeight: FontWeight.w700),
               ),
-              title: const Text('À propos & Licences'),
               subtitle: const Text(
-                'Muslim Coran v1.0.0 · Sources : Tanzil.net, Hamidullah, GeoNames, Polices OFL',
+                'Qurana v1.0.0 · Sources : Tanzil.net, Hamidullah, GeoNames, Polices OFL',
               ),
               onTap: () => _showAboutOrSupportDialog(
                 context,
@@ -190,6 +233,32 @@ class MoreMenuScreen extends StatelessWidget {
             child: const Text('Fermer'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _LeadingIconCircle extends StatelessWidget {
+  const _LeadingIconCircle({required this.icon, this.gold = false});
+
+  final IconData icon;
+  final bool gold;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: gold
+            ? AppColors.goldGradient
+            : AppColors.royalEmeraldGradient,
+      ),
+      child: Icon(
+        icon,
+        size: 20,
+        color: gold ? AppColors.emeraldNight : AppColors.goldLight,
       ),
     );
   }

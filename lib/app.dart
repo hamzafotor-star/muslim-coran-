@@ -15,7 +15,7 @@ class MuslimCoranApp extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
-      title: 'Muslim Coran',
+      title: 'Qurana',
       debugShowCheckedModeBanner: false,
       locale: prefs.locale,
       supportedLocales: AppLocalizations.supportedLocales,

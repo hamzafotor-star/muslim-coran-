@@ -27,7 +27,7 @@ class AppLocalizations {
   static const Map<String, Map<String, String>> _localizedValues =
       <String, Map<String, String>>{
     'fr': <String, String>{
-      'appTitle': 'Muslim Coran',
+      'appTitle': 'Qurana',
       'greeting': 'Assalamu alaykum',
       'tabQuran': 'Coran',
       'tabPrayers': 'Prières',
@@ -63,9 +63,12 @@ class AppLocalizations {
       'batteryOptimization': 'Optimisation batterie',
       'alignQibla': 'Aligné — précision haute',
       'calibrateSensor': 'Calibrer le capteur',
+      'appTagline': 'Votre compagnon du Coran, 100 % hors ligne',
+      'quickAccess': 'Accès rapide',
+      'todayPrayers': 'Prières du jour',
     },
     'ar': <String, String>{
-      'appTitle': 'مسلم قرآن',
+      'appTitle': 'قرآنا',
       'greeting': 'السلام عليكم',
       'tabQuran': 'القرآن',
       'tabPrayers': 'الصلوات',
@@ -101,9 +104,12 @@ class AppLocalizations {
       'batteryOptimization': 'تحسين البطارية',
       'alignQibla': 'محاذاة دقيقة باتجاه القبلة',
       'calibrateSensor': 'معايرة البوصلة',
+      'appTagline': 'رفيقك مع القرآن، بدون إنترنت',
+      'quickAccess': 'وصول سريع',
+      'todayPrayers': 'صلوات اليوم',
     },
     'en': <String, String>{
-      'appTitle': 'Muslim Coran',
+      'appTitle': 'Qurana',
       'greeting': 'Assalamu alaykum',
       'tabQuran': 'Quran',
       'tabPrayers': 'Prayers',
@@ -139,6 +145,9 @@ class AppLocalizations {
       'batteryOptimization': 'Battery optimization',
       'alignQibla': 'Aligned — high accuracy',
       'calibrateSensor': 'Calibrate sensor',
+      'appTagline': 'Your Quran companion, 100% offline',
+      'quickAccess': 'Quick access',
+      'todayPrayers': "Today's prayers",
     },
   };
 
@@ -185,6 +194,9 @@ class AppLocalizations {
   String get batteryOptimization => _t('batteryOptimization');
   String get alignQibla => _t('alignQibla');
   String get calibrateSensor => _t('calibrateSensor');
+  String get appTagline => _t('appTagline');
+  String get quickAccess => _t('quickAccess');
+  String get todayPrayers => _t('todayPrayers');
 
   String inTime(String duration) {
     if (locale.languageCode == 'ar') return 'بعد $duration';

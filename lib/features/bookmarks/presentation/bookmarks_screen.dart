@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/islamic_ornaments.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/bookmark_repository.dart';
 import '../domain/entities/bookmark_item.dart';
@@ -85,11 +86,9 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen>
     final AppLocalizations l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          l10n.tabBookmarks,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+      appBar: buildRoyalAppBar(
+        title: l10n.tabBookmarks,
+        subtitle: '${l10n.bookmarks} · ${l10n.notes} · ${l10n.history}',
         actions: <Widget>[
           IconButton(
             tooltip: 'Rechercher (E10)',
@@ -97,9 +96,8 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen>
             onPressed: () => context.push(AppRoutes.search),
           ),
         ],
-        bottom: TabBar(
+        bottom: buildRoyalTabBar(
           controller: _tabController,
-          indicatorColor: AppColors.accentSoftGold,
           tabs: <Widget>[
             Tab(text: l10n.bookmarks),
             Tab(text: l10n.notes),
@@ -123,27 +121,44 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen>
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Icon(
-              Icons.bookmark_border,
-              size: 56,
-              color: AppColors.primaryDeepGreen,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.emptyBookmarks,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: () => context.go(AppRoutes.quranList),
-              icon: const Icon(Icons.menu_book),
-              label: Text(l10n.openQuran),
-            ),
-          ],
+        child: MushafFrame(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const SizedBox(
+                width: 68,
+                height: 68,
+                child: CustomPaint(
+                  painter: IslamicStarPainter(),
+                  child: Center(
+                    child: Icon(
+                      Icons.bookmark_border,
+                      size: 30,
+                      color: AppColors.emeraldNight,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.emptyBookmarks,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: () => context.go(AppRoutes.quranList),
+                icon: const Icon(
+                  Icons.menu_book,
+                  color: AppColors.goldLight,
+                ),
+                label: Text(l10n.openQuran),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -218,14 +233,15 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen>
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  onTap: () {
+                  onTap: () async {
                     if (item.ayah != null) {
-                      context.push(
+                      await context.push(
                         AppRoutes.ayahReaderPath(
                           item.ayah!.surahId,
                           initialAyah: item.ayah!.ayahNumber,
                         ),
                       );
+                      _reload();
                     }
                   },
                 ),
@@ -300,14 +316,15 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen>
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text('Note : « ${note.body} »'),
-                  onTap: () {
+                  onTap: () async {
                     if (note.ayah != null) {
-                      context.push(
+                      await context.push(
                         AppRoutes.ayahReaderPath(
                           note.ayah!.surahId,
                           initialAyah: note.ayah!.ayahNumber,
                         ),
                       );
+                      _reload();
                     }
                   },
                 ),
@@ -343,18 +360,25 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen>
                 : 'Verset #${entry.ayahId}';
             return Card(
               child: ListTile(
-                leading: const Icon(Icons.history),
-                title: Text(title),
+                leading: IslamicStarBadge(
+                  label: '${entry.ayah?.surahId ?? 1}',
+                  size: 42,
+                ),
+                title: Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
                 subtitle: Text('Page ${entry.ayah?.page15 ?? 1} · Mode ${entry.mode}'),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () {
+                onTap: () async {
                   if (entry.ayah != null) {
-                    context.push(
+                    await context.push(
                       AppRoutes.ayahReaderPath(
                         entry.ayah!.surahId,
                         initialAyah: entry.ayah!.ayahNumber,
                       ),
                     );
+                    _reload();
                   }
                 },
               ),

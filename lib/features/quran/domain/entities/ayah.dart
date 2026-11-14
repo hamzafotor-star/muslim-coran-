@@ -55,7 +55,7 @@ class Ayah {
         ..writeln();
     }
     buffer.write(
-      '— Sourate $surahTitle ($surahId:$ayahNumber) · Source : Tanzil.net / Muslim Coran',
+      '— Sourate $surahTitle ($surahId:$ayahNumber) · Source : Tanzil.net / Qurana',
     );
     return buffer.toString();
   }

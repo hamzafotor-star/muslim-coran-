@@ -44,6 +44,7 @@ class AudioPlaybackState {
     this.currentSurahId = 1,
     this.currentSurahName = 'Al-Fâtiha',
     this.currentAyahNumber = 1,
+    this.totalAyahsInSurah = 7,
     this.reciter = defaultRecitersFirst,
     this.position = Duration.zero,
     this.duration = const Duration(minutes: 1, seconds: 15),
@@ -53,6 +54,27 @@ class AudioPlaybackState {
     this.isOfflineFile = false,
     this.errorMessage,
   });
+
+  /// Nombre canonique de versets pour chacune des 114 sourates du Coran.
+  static const List<int> surahAyahCounts = <int>[
+    7, 286, 200, 176, 120, 165, 206, 75, 129, 109,
+    123, 111, 43, 52, 99, 128, 111, 110, 98, 135,
+    112, 78, 118, 64, 77, 227, 93, 88, 69, 60,
+    34, 30, 73, 54, 45, 83, 182, 88, 75, 85,
+    54, 53, 89, 59, 37, 35, 38, 29, 18, 45,
+    60, 49, 62, 55, 78, 96, 29, 22, 24, 13,
+    14, 11, 11, 18, 12, 12, 30, 52, 52, 44,
+    28, 28, 20, 56, 40, 31, 50, 40, 46, 42,
+    29, 19, 36, 25, 22, 17, 19, 26, 30, 20,
+    15, 21, 11, 8, 8, 19, 5, 8, 8, 11,
+    11, 8, 3, 9, 5, 4, 7, 3, 6, 3,
+    5, 4, 5, 6,
+  ];
+
+  static int ayahCountForSurah(int surahId) {
+    final int idx = surahId.clamp(1, 114) - 1;
+    return surahAyahCounts[idx];
+  }
 
   static const ReciterOption defaultRecitersFirst = ReciterOption(
     id: 1,
@@ -141,6 +163,7 @@ class AudioPlaybackState {
   final int currentSurahId;
   final String currentSurahName;
   final int currentAyahNumber;
+  final int totalAyahsInSurah;
   final ReciterOption reciter;
   final Duration position;
   final Duration duration;
@@ -161,6 +184,7 @@ class AudioPlaybackState {
     int? currentSurahId,
     String? currentSurahName,
     int? currentAyahNumber,
+    int? totalAyahsInSurah,
     ReciterOption? reciter,
     Duration? position,
     Duration? duration,
@@ -178,6 +202,7 @@ class AudioPlaybackState {
       currentSurahId: currentSurahId ?? this.currentSurahId,
       currentSurahName: currentSurahName ?? this.currentSurahName,
       currentAyahNumber: currentAyahNumber ?? this.currentAyahNumber,
+      totalAyahsInSurah: totalAyahsInSurah ?? this.totalAyahsInSurah,
       reciter: reciter ?? this.reciter,
       position: position ?? this.position,
       duration: duration ?? this.duration,
@@ -204,10 +229,22 @@ class AudioController extends StateNotifier<AudioPlaybackState> {
 
   final AudioPlayer _player = AudioPlayer();
   Timer? _sleepTimer;
+  bool _handlingCompletion = false;
 
   void _initPlayerStreams() {
     _player.positionStream.listen((Duration pos) {
-      if (mounted) {
+      if (!mounted) return;
+      if (state.isPlaying && state.duration.inMilliseconds > 0) {
+        final int computedAyah =
+            ((pos.inMilliseconds / state.duration.inMilliseconds) *
+                        state.totalAyahsInSurah)
+                    .floor() +
+                1;
+        state = state.copyWith(
+          position: pos,
+          currentAyahNumber: computedAyah.clamp(1, state.totalAyahsInSurah),
+        );
+      } else {
         state = state.copyWith(position: pos);
       }
     });
@@ -223,40 +260,75 @@ class AudioController extends StateNotifier<AudioPlaybackState> {
             state.repeatMode == RepeatPlaybackMode.ayah) {
           _player.seek(Duration.zero);
           _player.play();
-        } else {
+        } else if (state.currentSurahId < 114 && !_handlingCompletion) {
+          _handlingCompletion = true;
+          nextSurah().whenComplete(() {
+            _handlingCompletion = false;
+          });
+        } else if (state.currentSurahId >= 114) {
           state = state.copyWith(isPlaying: false);
         }
       }
     });
   }
 
+  int _targetMsForAyah(int ayahNumber, int totalAyahs, int durationMs) {
+    if (ayahNumber <= 1 || durationMs <= 0 || totalAyahs <= 1) return 0;
+    final int raw = (((ayahNumber - 1) / totalAyahs) * durationMs).ceil();
+    if (raw >= durationMs) return durationMs;
+    return (raw + 1).clamp(0, durationMs);
+  }
+
   Future<void> playSurah({
     required int surahId,
     required String surahName,
     int activeAyahNumber = 1,
+    int? totalAyahs,
   }) async {
+    final int resolvedSurahId = surahId.clamp(1, 114);
+    final int resolvedTotal = (totalAyahs != null && totalAyahs > 0)
+        ? totalAyahs
+        : AudioPlaybackState.ayahCountForSurah(resolvedSurahId);
+    final int resolvedAyah = activeAyahNumber.clamp(1, resolvedTotal);
+
     state = state.copyWith(
       isVisible: true,
       isPlaying: true,
-      currentSurahId: surahId.clamp(1, 114),
+      currentSurahId: resolvedSurahId,
       currentSurahName: surahName,
-      currentAyahNumber: activeAyahNumber,
+      currentAyahNumber: resolvedAyah,
+      totalAyahsInSurah: resolvedTotal,
       clearError: true,
     );
 
     try {
       final Directory appDir = await getApplicationDocumentsDirectory();
-      final String padded = surahId.clamp(1, 114).toString().padLeft(3, '0');
+      final String padded = resolvedSurahId.toString().padLeft(3, '0');
       final File localFile = File(
         p.join(appDir.path, 'audio', 'reciter_${state.reciter.id}', '$padded.mp3'),
       );
 
+      Duration? loadedDuration;
       if (localFile.existsSync()) {
         state = state.copyWith(isOfflineFile: true);
-        await _player.setFilePath(localFile.path);
+        loadedDuration = await _player.setFilePath(localFile.path);
       } else {
         state = state.copyWith(isOfflineFile: false);
-        await _player.setUrl(state.reciter.surahAudioUrl(surahId));
+        loadedDuration =
+            await _player.setUrl(state.reciter.surahAudioUrl(resolvedSurahId));
+      }
+      if (loadedDuration != null && loadedDuration.inMilliseconds > 0) {
+        state = state.copyWith(duration: loadedDuration);
+        if (resolvedAyah > 1) {
+          final int targetMs = _targetMsForAyah(
+            resolvedAyah,
+            resolvedTotal,
+            loadedDuration.inMilliseconds,
+          );
+          final Duration targetPos = Duration(milliseconds: targetMs);
+          state = state.copyWith(position: targetPos);
+          await _player.seek(targetPos);
+        }
       }
       await _player.setSpeed(state.speed);
       await _player.play();
@@ -274,6 +346,8 @@ class AudioController extends StateNotifier<AudioPlaybackState> {
       await playSurah(
         surahId: state.currentSurahId,
         surahName: state.currentSurahName,
+        activeAyahNumber: state.currentAyahNumber,
+        totalAyahs: state.totalAyahsInSurah,
       );
       return;
     }
@@ -291,11 +365,52 @@ class AudioController extends StateNotifier<AudioPlaybackState> {
     }
   }
 
+  Future<void> closePlayer() async {
+    state = state.copyWith(isPlaying: false, isVisible: false);
+    try {
+      await _player.pause();
+    } catch (_) {}
+  }
+
   Future<void> seekTo(Duration target) async {
     state = state.copyWith(position: target);
     try {
       await _player.seek(target);
     } catch (_) {}
+  }
+
+  Future<void> seekToAyah(int ayahNumber) async {
+    final int targetAyah = ayahNumber.clamp(1, state.totalAyahsInSurah);
+    final int durationMs = state.duration.inMilliseconds;
+    if (durationMs > 0) {
+      final int targetMs = _targetMsForAyah(
+        targetAyah,
+        state.totalAyahsInSurah,
+        durationMs,
+      );
+      final Duration targetPos = Duration(milliseconds: targetMs);
+      state = state.copyWith(
+        currentAyahNumber: targetAyah,
+        position: targetPos,
+      );
+      try {
+        await _player.seek(targetPos);
+      } catch (_) {}
+    } else {
+      state = state.copyWith(currentAyahNumber: targetAyah);
+    }
+  }
+
+  Future<void> nextAyah() async {
+    final int target =
+        (state.currentAyahNumber + 1).clamp(1, state.totalAyahsInSurah);
+    await seekToAyah(target);
+  }
+
+  Future<void> previousAyah() async {
+    final int target =
+        (state.currentAyahNumber - 1).clamp(1, state.totalAyahsInSurah);
+    await seekToAyah(target);
   }
 
   Future<void> skipBySeconds(int deltaSeconds) async {
@@ -306,12 +421,20 @@ class AudioController extends StateNotifier<AudioPlaybackState> {
 
   Future<void> previousSurah() async {
     final int prev = (state.currentSurahId - 1).clamp(1, 114);
-    await playSurah(surahId: prev, surahName: 'Sourate $prev');
+    await playSurah(
+      surahId: prev,
+      surahName: 'Sourate $prev',
+      totalAyahs: AudioPlaybackState.ayahCountForSurah(prev),
+    );
   }
 
   Future<void> nextSurah() async {
     final int next = (state.currentSurahId + 1).clamp(1, 114);
-    await playSurah(surahId: next, surahName: 'Sourate $next');
+    await playSurah(
+      surahId: next,
+      surahName: 'Sourate $next',
+      totalAyahs: AudioPlaybackState.ayahCountForSurah(next),
+    );
   }
 
   Future<void> setSpeed(double newSpeed) async {
@@ -335,6 +458,7 @@ class AudioController extends StateNotifier<AudioPlaybackState> {
         surahId: state.currentSurahId,
         surahName: state.currentSurahName,
         activeAyahNumber: state.currentAyahNumber,
+        totalAyahs: state.totalAyahsInSurah,
       );
     }
   }

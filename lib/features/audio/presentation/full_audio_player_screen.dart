@@ -37,6 +37,10 @@ class FullAudioPlayerScreen extends ConsumerWidget {
     final bool isDownloaded =
         state.isOfflineFile || currentDownload?.status == DownloadItemStatus.done;
 
+    final String surahTitle = state.currentSurahName.startsWith('Sourate')
+        ? state.currentSurahName
+        : 'Sourate ${state.currentSurahName}';
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -53,46 +57,91 @@ class FullAudioPlayerScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            // En-tête sourate & récitateur
-            Column(
-              children: <Widget>[
-                Container(
-                  width: 112,
-                  height: 112,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryDeepGreen,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.accentSoftGold,
-                      width: 2,
-                    ),
-                  ),
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/images/app_logo.png',
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(
-                        Icons.menu_book,
-                        size: 52,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              // En-tête sourate & récitateur
+              Column(
+                children: <Widget>[
+                  Container(
+                    width: 112,
+                    height: 112,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryDeepGreen,
+                      shape: BoxShape.circle,
+                      border: Border.all(
                         color: AppColors.accentSoftGold,
+                        width: 2,
+                      ),
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/app_logo.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.menu_book,
+                          size: 52,
+                          color: AppColors.accentSoftGold,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Sourate ${state.currentSurahName}',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(height: 14),
+                  Text(
+                    surahTitle,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      IconButton(
+                        tooltip: 'Verset précédent',
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(Icons.chevron_left),
+                        onPressed: state.currentAyahNumber > 1
+                            ? controller.previousAyah
+                            : null,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentSoftGold.withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: AppColors.accentSoftGold.withOpacity(0.6),
+                          ),
+                        ),
+                        child: Text(
+                          'Verset ${state.currentAyahNumber} / ${state.totalAyahsInSurah}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryDeepGreen,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Verset suivant',
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(Icons.chevron_right),
+                        onPressed:
+                            state.currentAyahNumber < state.totalAyahsInSurah
+                                ? controller.nextAyah
+                                : null,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
                 InkWell(
                   borderRadius: BorderRadius.circular(10),
                   onTap: () =>
@@ -301,6 +350,7 @@ class FullAudioPlayerScreen extends ConsumerWidget {
               ],
             ),
           ],
+        ),
         ),
       ),
     );

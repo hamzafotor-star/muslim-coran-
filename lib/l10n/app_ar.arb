@@ -1,6 +1,6 @@
 {
   "@@locale": "ar",
-  "appTitle": "مسلم قرآن",
+  "appTitle": "قرآنا",
   "greeting": "السلام عليكم",
   "tabQuran": "القرآن",
   "tabPrayers": "الصلوات",
@@ -51,5 +51,8 @@
   "useMyLocation": "استخدام موقعي الحالي",
   "batteryOptimization": "تحسين البطارية",
   "alignQibla": "محاذاة دقيقة باتجاه القبلة",
-  "calibrateSensor": "معايرة البوصلة"
+  "calibrateSensor": "معايرة البوصلة",
+  "appTagline": "رفيقك مع القرآن، بدون إنترنت",
+  "quickAccess": "وصول سريع",
+  "todayPrayers": "صلوات اليوم"
 }

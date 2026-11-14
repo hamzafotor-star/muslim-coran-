@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/islamic_ornaments.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/location_repository.dart';
 import '../data/prayer_alarm_scheduler.dart';
@@ -251,12 +252,13 @@ class PrayerTimesScreen extends ConsumerWidget {
       ),
     ];
 
+    final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          l10n.tabPrayers,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+      appBar: buildRoyalAppBar(
+        title: l10n.tabPrayers,
+        subtitle: '${state.city.name} (${state.city.timezone})',
         actions: <Widget>[
           IconButton(
             tooltip: l10n.chooseCity,
@@ -271,39 +273,61 @@ class PrayerTimesScreen extends ConsumerWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
         children: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: () => context.push(AppRoutes.cityPicker),
-                child: Row(
-                  children: <Widget>[
-                    const Icon(
-                      Icons.place,
-                      size: 18,
-                      color: AppColors.primaryDeepGreen,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${state.city.name} (${state.city.timezone})',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
+          // Barre de ville & Mode Ramadan
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: () => context.push(AppRoutes.cityPicker),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: <Widget>[
+                            const Icon(
+                              Icons.place,
+                              size: 20,
+                              color: AppColors.accentSoftGold,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${state.city.name} (${state.city.timezone})',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Ramadan',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  Switch(
+                    value: state.isRamadanMode,
+                    onChanged: controller.setRamadanMode,
+                  ),
+                ],
               ),
-              Switch(
-                value: state.isRamadanMode,
-                onChanged: controller.setRamadanMode,
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+
+          // Sélecteur de date
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
@@ -312,11 +336,32 @@ class PrayerTimesScreen extends ConsumerWidget {
                 icon: const Icon(Icons.chevron_left),
                 onPressed: () => controller.changeSelectedDateByDays(-1),
               ),
-              Text(
-                schedule.formattedDate,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.accentSoftGold.withOpacity(0.55),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 15,
+                      color: AppColors.accentSoftGold,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      schedule.formattedDate,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               IconButton(
@@ -326,44 +371,72 @@ class PrayerTimesScreen extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
-          // Carte Prochaine Prière
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.primaryDeepGreen,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  '${l10n.nextPrayer} : ${schedule.nextPrayerName.toUpperCase()}',
-                  style: const TextStyle(
-                    color: AppColors.secondaryLightGreen,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Text(
-                      schedule.nextPrayerFormattedTime,
-                      style: const TextStyle(
-                        color: AppColors.accentSoftGold,
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
+          // Carte Prochaine Prière royale
+          RoyalPatternBackground(
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      const CustomPaint(
+                        size: Size.square(14),
+                        painter: IslamicStarPainter(strokeWidth: 0.6),
                       ),
-                    ),
-                    Text(
-                      '(${l10n.inTime(schedule.countdownText)})',
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 8),
+                      Text(
+                        '${l10n.nextPrayer} : ${schedule.nextPrayerName.toUpperCase()}',
+                        style: const TextStyle(
+                          color: AppColors.secondaryLightGreen,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: <Widget>[
+                      Text(
+                        schedule.nextPrayerFormattedTime,
+                        style: const TextStyle(
+                          color: AppColors.goldLight,
+                          fontSize: 34,
+                          fontWeight: FontWeight.w800,
+                          height: 1.0,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppColors.goldLight.withOpacity(0.55),
+                          ),
+                        ),
+                        child: Text(
+                          '(${l10n.inTime(schedule.countdownText)})',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -375,19 +448,39 @@ class PrayerTimesScreen extends ConsumerWidget {
                 .startsWith(schedule.nextPrayerName.toLowerCase());
             return Card(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: isNext
-                    ? const BorderSide(
-                        color: AppColors.accentSoftGold,
-                        width: 2,
-                      )
-                    : BorderSide.none,
+                borderRadius: BorderRadius.circular(18),
+                side: BorderSide(
+                  color: isNext
+                      ? AppColors.accentSoftGold
+                      : AppColors.accentSoftGold.withOpacity(0.22),
+                  width: isNext ? 2 : 0.8,
+                ),
               ),
               child: ListTile(
+                leading: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: isNext ? AppColors.goldGradient : null,
+                    color: isNext
+                        ? null
+                        : AppColors.accentSoftGold.withOpacity(0.12),
+                  ),
+                  child: Icon(
+                    _iconForPrayer(row.key),
+                    size: 19,
+                    color: isNext
+                        ? AppColors.emeraldNight
+                        : (isDark
+                            ? AppColors.goldLight
+                            : AppColors.primaryDeepGreen),
+                  ),
+                ),
                 title: Text(
                   row.label,
                   style: TextStyle(
-                    fontWeight: isNext ? FontWeight.bold : FontWeight.w500,
+                    fontWeight: isNext ? FontWeight.w800 : FontWeight.w600,
                   ),
                 ),
                 trailing: Row(
@@ -397,11 +490,15 @@ class PrayerTimesScreen extends ConsumerWidget {
                       DailyPrayerSchedule.formatHm(row.time),
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isNext ? AppColors.primaryDeepGreen : null,
+                        fontWeight: FontWeight.w800,
+                        color: isNext
+                            ? (isDark
+                                ? AppColors.goldLight
+                                : AppColors.primaryDeepGreen)
+                            : null,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     if (row.canToggle)
                       IconButton(
                         tooltip: row.alarmEnabled
@@ -423,20 +520,43 @@ class PrayerTimesScreen extends ConsumerWidget {
             );
           }),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
+          const OrnamentDivider(),
+          const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               'Méthode : ${state.method.code} · Asr : ${state.asrSchool.code} · Mode Ramadan : ${state.isRamadanMode ? "Activé (Imsak/Iftar)" : "Désactivé"}',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  IconData _iconForPrayer(String key) {
+    switch (key) {
+      case 'imsak':
+      case 'fajr':
+        return Icons.wb_twilight_rounded;
+      case 'sunrise':
+        return Icons.wb_sunny_outlined;
+      case 'dhuhr':
+        return Icons.light_mode_rounded;
+      case 'asr':
+        return Icons.wb_cloudy_outlined;
+      case 'maghrib':
+        return Icons.nights_stay_outlined;
+      case 'isha':
+        return Icons.bedtime_rounded;
+      default:
+        return Icons.schedule_rounded;
+    }
   }
 }
 

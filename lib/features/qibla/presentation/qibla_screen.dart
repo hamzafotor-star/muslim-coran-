@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/islamic_ornaments.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../prayer/presentation/prayer_times_screen.dart';
 import '../domain/qibla_calculator.dart';
@@ -136,11 +137,9 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
         _accuracy != null && _accuracy! > 30.0;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          l10n.tabQibla,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+      appBar: buildRoyalAppBar(
+        title: l10n.tabQibla,
+        subtitle: '${prayerState.city.name} · ${distanceKm.round()} km',
         actions: <Widget>[
           IconButton(
             tooltip: l10n.chooseCity,
@@ -150,26 +149,53 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             Column(
               children: <Widget>[
-                Text(
-                  prayerState.city.name,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Kaaba : ${qiblaBearing.round()}° $cardinal · Distance : ${distanceKm.round()} km',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: AppColors.primaryDeepGreen,
-                    fontWeight: FontWeight.w600,
+                RoyalPatternBackground(
+                  borderRadius: BorderRadius.circular(22),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        IslamicStarBadge(
+                          label: '${qiblaBearing.round()}°',
+                          size: 54,
+                          highlighted: true,
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                prayerState.city.name,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                'Kaaba : ${qiblaBearing.round()}° $cardinal · Distance : ${distanceKm.round()} km',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.goldLight,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 if (hasMagneticInterference) ...<Widget>[
@@ -187,7 +213,8 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                         Expanded(
                           child: Text(
                             'Interférence magnétique détectée : calibrez le capteur en dessinant un « 8 ».',
-                            style: TextStyle(fontSize: 12, color: Colors.black87),
+                            style:
+                                TextStyle(fontSize: 12, color: Colors.black87),
                           ),
                         ),
                       ],
@@ -200,8 +227,8 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
             // Cadran Boussole
             Center(
               child: Container(
-                width: 260,
-                height: 260,
+                width: 268,
+                height: 268,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
@@ -210,6 +237,9 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                         : AppColors.accentSoftGold,
                     width: isAligned ? 5 : 3,
                   ),
+                  boxShadow: isAligned
+                      ? AppColors.goldGlow(opacity: 0.45)
+                      : AppColors.softShadow(opacity: 0.18),
                   color: isAligned
                       ? AppColors.secondaryLightGreen.withOpacity(0.35)
                       : Theme.of(context).cardTheme.color,
@@ -217,11 +247,24 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: <Widget>[
+                    CustomPaint(
+                      size: const Size.square(240),
+                      painter: IslamicStarPainter(
+                        fillColor: Colors.transparent,
+                        strokeColor: AppColors.accentSoftGold.withOpacity(0.28),
+                        strokeWidth: 1.0,
+                        innerRingColor:
+                            AppColors.accentSoftGold.withOpacity(0.22),
+                      ),
+                    ),
                     const Positioned(
                       top: 12,
                       child: Text(
                         'N',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.accentSoftGold,
+                        ),
                       ),
                     ),
                     const Positioned(
@@ -281,28 +324,46 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                     ),
                   )
                 else
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(
-                        isAligned
-                            ? Icons.check_circle
-                            : Icons.compass_calibration_outlined,
-                        color: isAligned
-                            ? AppColors.primaryDeepGreen
-                            : AppColors.accentSoftGold,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: isAligned
+                          ? AppColors.primaryDeepGreen
+                          : AppColors.accentSoftGold.withOpacity(0.10),
+                      border: Border.all(
+                        color: AppColors.accentSoftGold.withOpacity(0.6),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        isAligned
-                            ? l10n.alignQibla
-                            : 'Cap actuel : ${heading.round()}° — Tournez vers ${qiblaBearing.round()}° $cardinal',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: isAligned ? AppColors.primaryDeepGreen : null,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Icon(
+                          isAligned
+                              ? Icons.check_circle
+                              : Icons.compass_calibration_outlined,
+                          color: isAligned
+                              ? AppColors.goldLight
+                              : AppColors.accentSoftGold,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            isAligned
+                                ? l10n.alignQibla
+                                : 'Cap actuel : ${heading.round()}° — Tournez vers ${qiblaBearing.round()}° $cardinal',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isAligned ? Colors.white : null,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(

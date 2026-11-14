@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Muslim Coran",
+  "appTitle": "Qurana",
   "greeting": "Assalamu alaykum",
   "tabQuran": "Quran",
   "tabPrayers": "Prayers",
@@ -51,5 +51,8 @@
   "useMyLocation": "Use my location",
   "batteryOptimization": "Battery optimization",
   "alignQibla": "Aligned — high accuracy",
-  "calibrateSensor": "Calibrate sensor"
+  "calibrateSensor": "Calibrate sensor",
+  "appTagline": "Your Quran companion, 100% offline",
+  "quickAccess": "Quick access",
+  "todayPrayers": "Today's prayers"
 }

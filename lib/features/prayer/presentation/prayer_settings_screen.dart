@@ -345,22 +345,22 @@ class PrayerSettingsScreen extends ConsumerWidget {
                   brand: 'Tecno (HiOS) & Infinix (XOS)',
                   steps:
                       '1. Ouvrez « Phone Master » > Gestion du démarrage automatique (Auto-start).\n'
-                      '2. Activez « Muslim Coran ».\n'
-                      '3. Dans Paramètres > Batterie > Optimisation de la batterie, sélectionnez « Ne pas optimiser » pour Muslim Coran.',
+                      '2. Activez « Qurana ».\n'
+                      '3. Dans Paramètres > Batterie > Optimisation de la batterie, sélectionnez « Ne pas optimiser » pour Qurana.',
                 ),
                 _BrandBatteryCard(
                   brand: 'Xiaomi / Redmi / POCO (MIUI & HyperOS)',
                   steps:
-                      '1. Paramètres > Applications > Gérer les applications > Muslim Coran.\n'
+                      '1. Paramètres > Applications > Gérer les applications > Qurana.\n'
                       '2. Activez « Démarrage automatique » (Autostart).\n'
                       '3. Dans « Économiseur de batterie », choisissez « Aucune restriction ».',
                 ),
                 _BrandBatteryCard(
                   brand: 'Samsung (One UI)',
                   steps:
-                      '1. Paramètres > Applications > Muslim Coran > Batterie.\n'
+                      '1. Paramètres > Applications > Qurana > Batterie.\n'
                       '2. Sélectionnez « Non restreinte ».\n'
-                      '3. Vérifiez dans Maintenance de l’appareil > Batterie > Limites d’utilisation en arrière-plan que Muslim Coran n’est pas en veille profonde.',
+                      '3. Vérifiez dans Maintenance de l’appareil > Batterie > Limites d’utilisation en arrière-plan que Qurana n’est pas en veille profonde.',
                 ),
               ],
             );
